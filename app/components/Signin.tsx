@@ -33,7 +33,12 @@ export default function SignInPage() {
     e.preventDefault()
     setIsLoading(true)
     setError("")
-
+ /*    e.preventDefault();
+if(passcode.length < 6){
+  setError("Purchase must be at least characters");
+  setIsLoading(false);
+  return;
+} */
     try {
       const checkUserUrl = `https://espoint.onrender.com/espoint/get_members_records/${username}/approved`
       const userRes = await axios.get(checkUserUrl)
@@ -71,6 +76,8 @@ export default function SignInPage() {
       setIsLoading(false)
     }
   }
+
+ 
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">

@@ -19,8 +19,6 @@ export interface Service {
 export interface Member {
   id: string;
   name: string;
-  email?: string;
-  position?: string;
 }
 
 export interface CreateUnitPayload {
@@ -127,8 +125,13 @@ export const ServicesAPI = {
   createPayment: (payload: CreatePaymentPayload) => apiRequest<{ success: boolean }>("create_payment", "POST", payload),
   getPayment: (paymentId: string) => apiRequest<any>(`get_payment/${paymentId}`),
 
-  // Members
-  createMember: (payload: CreateMemberPayload) => apiRequest<{ success: boolean }>("create_member", "POST", payload),
-  getMembersRecords: async (member: string, status: string) =>
-    safeArray<Member>(await apiRequest<any>(`get_members_records/${member}/${status}`)),
+  // Members -  Now only returns `id` & `name` of approved members
+  getMembersRecords: async (member: string, status: string) => {
+    const raw = await apiRequest<any>(`get_members_records/${member}/${status}`);
+    const arr = safeArray<any>(raw);
+    return arr.map((m) => ({
+      id: m.id || m.memberId || m.username,
+      name: m.name || m.memberName || m.username,
+    })) as Member[];
+  }
 };

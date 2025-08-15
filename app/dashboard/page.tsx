@@ -4,9 +4,17 @@ import { useEffect, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Users, UserPlus, Settings, Activity } from "lucide-react"
 
+// Define the Member type inline (or import from your models/services)
+type Member = {
+  username?: string;
+  status?: string;
+  position?: string;
+  [key: string]: any;
+};
+
 export default function DashboardPage() {
   const [user, setUser] = useState<{ username: string } | null>(null)
-  const [members, setMembers] = useState<any[]>([])
+  const [members, setMembers] = useState<Member[]>([])
 
   useEffect(() => {
     const userData = localStorage.getItem("user")
@@ -52,7 +60,7 @@ export default function DashboardPage() {
       <div>
         <h1 className="text-3xl font-bold">Dashboard</h1>
         <p className="text-muted-foreground">
-          Welcome back, {user?.username}! Here's an overview of your member management system.
+          Welcome back, {user?.username}! Here&apos;s an overview of your member management system.
         </p>
       </div>
 

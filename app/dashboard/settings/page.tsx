@@ -329,7 +329,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Edit, Trash2 } from "lucide-react";
 import { memberApi } from "@/utils/memberApi";
-
+import { Eye, RefreshCw, EyeOff } from "lucide-react";
 interface Member {
   name: string;
   status: "approved" | "suspended" | "pending";
@@ -343,6 +343,14 @@ const LABELS = [
   { value: "regular", label: "Regular" },
 ];
 
+type ApiMember = {
+  member: string;
+  label: string;
+  status: string;
+  added_by?: string;
+  created?: string;
+};
+
 export default function SettingsPage() {
   const [members, setMembers] = useState<Member[]>([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -350,14 +358,19 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(false);
   const [filterStatus, setFilterStatus] = useState("approved");
   const [error, setError] = useState("");
+  const [passcode, setPasscode] = useState('')
+  const [showPasscode, setShowPasscode] = useState(false)
   const [editingMember, setEditingMember] = useState<Member | null>(null);
   const [formData, setFormData] = useState({ name: "", labels: "regular" as Member["labels"], status: "pending" as Member["status"], passcode: "" });
-
+  const generateRandomPasscode = () => {
+    const randomPasscode = Math.random().toString(36).substring(5,10).toUpperCase()
+    setPasscode(randomPasscode)
+  }
   const router = useRouter();
   const user = typeof window !== "undefined" ? JSON.parse(localStorage.getItem("user") || "{}") : {};
   const role = user.role || "regular";
   const username = user.username || "";
-  const efaultStatus = role === "admin" ? "approved" :"approved";
+  const defaultStatus = role === "admin" ? "approved" :"approved";
   // Fetch members from API
   const fetchMembers = async (status: string = "approved") => {
     if (!username) return;
@@ -366,7 +379,7 @@ export default function SettingsPage() {
     try {
       const data = await memberApi.getMembers(username, status);
       setMembers(
-        data.map((m: any) => ({
+        data.map((m: ApiMember) => ({
           name: m.member,
           labels: m.label,
           status: m.status,
@@ -480,9 +493,44 @@ export default function SettingsPage() {
                 <div className="space-y-2"><Label>Name</Label>
                   <Input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })}/>
                 </div>
-                <div className="space-y-2"><Label>Passcode</Label>
-                  <Input type="password" value={formData.passcode} onChange={(e) => setFormData({ ...formData, passcode: e.target.value })}/>
+                <div className="space-y-2">
+              <Label htmlFor="passcode">Passcode</Label>
+              <div className="relative">
+                <Input
+                  id="passcode"
+                  type={showPasscode ? "text" : "password"}
+                  placeholder="Enter your passcode"
+                  value={passcode}
+                  onChange={(e) => setPasscode(e.target.value)}
+                  required
+                  className="pr-20"
+                />
+                <div className="absolute right-1 top-1/2 -translate-y-1/2 flex gap-1">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 w-7 p-0"
+                    onClick={() => setShowPasscode(!showPasscode)}
+                  >
+                    {showPasscode ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 w-7 p-0"
+                    onClick={generateRandomPasscode}
+                    title="Generate random passcode"
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                  </Button>
                 </div>
+              </div>
+            </div>
+                {/* <div className="space-y-2"><Label>Passcode</Label>
+                  <Input type="password" value={formData.passcode} onChange={(e) => setFormData({ ...formData, passcode: e.target.value })}/>
+                </div> */}
                 <div className="space-y-2"><Label>Labels</Label>
                   <Select value={formData.labels} onValueChange={(value: Member["labels"]) => setFormData({ ...formData, labels: value })}>
                     <SelectTrigger><SelectValue/></SelectTrigger>
@@ -580,11 +628,40 @@ export default function SettingsPage() {
               </div>
 
               <div className="space-y-2">
-                <Label>Passcode</Label>
-                  <Input
-                  value={formData.passcode} disabled>
-                  </Input>
-              </div>
+                            <Label htmlFor="passcode">Passcode</Label>
+                            <div className="relative">
+                              <Input
+                                id="passcode"
+                                type={showPasscode ? "text" : "password"}
+                                placeholder="Enter your passcode"
+                                value={passcode}
+                                onChange={(e) => setPasscode(e.target.value)}
+                                required
+                                className="pr-20"
+                              />
+                              <div className="absolute right-1 top-1/2 -translate-y-1/2 flex gap-1">
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-7 w-7 p-0"
+                                  onClick={() => setShowPasscode(!showPasscode)}
+                                >
+                                  {showPasscode ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                </Button>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-7 w-7 p-0"
+                                  onClick={generateRandomPasscode}
+                                  title="Generate random passcode"
+                                >
+                                  <RefreshCw className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
               <div className="space-y-2"><Label>Status</Label>
                 <Select value={formData.status} onValueChange={(value: Member["status"]) => setFormData({ ...formData, status: value })}>
                   <SelectTrigger><SelectValue/></SelectTrigger>

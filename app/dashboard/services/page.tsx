@@ -64,7 +64,6 @@ export default function ServicesPage() {
 
   const router = useRouter();
 
-  // Load initial data
   useEffect(() => {
     const userData = localStorage.getItem("user");
     if (userData) {
@@ -86,7 +85,6 @@ export default function ServicesPage() {
     setServices(data);
   };
 
-  // Add new service
   const handleAddService = async () => {
     if (!formData.name || !formData.description || !currentUser) return;
     try {
@@ -99,7 +97,6 @@ export default function ServicesPage() {
     }
   };
 
-  // Delete service
   const handleDeleteService = async (id: string) => {
     if (!currentUser) return;
     try {
@@ -110,7 +107,6 @@ export default function ServicesPage() {
     }
   };
 
-  // Edit service (name, desc, availability, members)
   const handleEditService = async () => {
     if (!editingService || !currentUser) return;
     try {
@@ -126,14 +122,12 @@ export default function ServicesPage() {
     }
   };
 
-  // Add or update member in form
   const addMemberToService = async (memberId: string, role: string, serviceId?: string) => {
     const member = members.find((m) => m.id === memberId);
     if (!member) return;
 
     const newMember: ServiceMember = { memberId: member.id, memberName: member.name, role };
 
-    // If editing an existing service, update backend immediately
     if (serviceId && currentUser) {
       const payload: ConfirmMemberRolePayload = { memberId: member.id, role };
       await ServicesAPI.confirmMemberRole(payload);
@@ -146,9 +140,7 @@ export default function ServicesPage() {
     }));
   };
 
-  // Remove member from service
   const removeMemberFromService = async (memberId: string, serviceId?: string) => {
-    // Sync removal with backend if editing existing service
     if (serviceId && currentUser) {
       const payload: RemoveMemberRolePayload = { memberId, role: "" };
       await ServicesAPI.removeMemberRole(payload);
@@ -187,7 +179,6 @@ export default function ServicesPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header + Add Service */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Services</h1>
@@ -217,7 +208,6 @@ export default function ServicesPage() {
         </Dialog>
       </div>
 
-      {/* Services Table */}
       <Card>
         <CardHeader>
           <CardTitle>Services</CardTitle>
@@ -248,7 +238,7 @@ export default function ServicesPage() {
                       ))}
                     </TableCell>
                     <TableCell>{service.createdAt ? new Date(service.createdAt).toLocaleDateString() : "-"}</TableCell>
-                    <TableCell>
+                    <TableCell className="space-x-1">
                       <Button size="sm" onClick={() => router.push(`/dashboard/services/${service.id}`)}><Eye /></Button>
                       <Button size="sm" variant="outline" onClick={() => openEditDialog(service)}><Edit /></Button>
                       <Button size="sm" variant="outline" onClick={() => handleDeleteService(service.id)}><Trash2 /></Button>
@@ -261,7 +251,6 @@ export default function ServicesPage() {
         </CardContent>
       </Card>
 
-      {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -285,7 +274,6 @@ export default function ServicesPage() {
   );
 }
 
-/** Extracted reusable service form */
 function ServiceForm({
   formData,
   setFormData,
@@ -327,17 +315,17 @@ function ServiceForm({
         ))}
       </div>
 
-      <Label>Assign Staff Members</Label>
+      <Label>Assign Approved Members</Label>
       <Select onValueChange={(memberId) => addMember(memberId, "staff")}>
         <SelectTrigger>
-          <SelectValue placeholder="Select member to add" />
+          <SelectValue placeholder="Select approved member" />
         </SelectTrigger>
         <SelectContent>
           {members
             .filter((m) => !formData.members?.some((sm) => sm.memberId === m.id))
             .map((member) => (
               <SelectItem key={member.id} value={member.id}>
-                {member.name} ({member.position})
+                {member.name}
               </SelectItem>
             ))}
         </SelectContent>
