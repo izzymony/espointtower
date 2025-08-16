@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -39,7 +38,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Edit, Trash2 } from "lucide-react"; // 👈 Removed Eye
+import { Plus, Edit, Trash2 } from "lucide-react";
 import {
   ServicesAPI,
   Service,
@@ -241,25 +240,6 @@ export default function ServicesPage() {
     setIsEditDialogOpen(true);
   };
 
-  const getRoleColor = (role: string) => {
-    switch (role) {
-      case "admin":
-        return "bg-purple-100 text-purple-800";
-      case "bookings":
-        return "bg-blue-100 text-blue-800";
-      case "content-creator":
-        return "bg-green-100 text-green-800";
-      case "customer-service":
-        return "bg-yellow-100 text-yellow-800";
-      case "technical-support":
-        return "bg-red-100 text-red-800";
-      case "manager":
-        return "bg-indigo-100 text-indigo-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -276,7 +256,7 @@ export default function ServicesPage() {
               <Plus className="mr-2 h-4 w-4" /> Add Service
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-lg">
+          <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Add New Service</DialogTitle>
               <DialogDescription>
@@ -315,7 +295,6 @@ export default function ServicesPage() {
                   <TableHead className="w-[200px]">ID</TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>Created By</TableHead>
-                  
                   <TableHead>Created Date</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -333,7 +312,6 @@ export default function ServicesPage() {
                       <TableCell className="font-mono text-xs">{service.id}</TableCell>
                       <TableCell>{service.name}</TableCell>
                       <TableCell>{service.createdBy || "-"}</TableCell>
-                     
                       <TableCell>
                         {service.createdAt
                           ? new Date(service.createdAt).toLocaleDateString()
@@ -366,7 +344,7 @@ export default function ServicesPage() {
 
       {/* Edit dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Service</DialogTitle>
             <DialogDescription>
@@ -392,7 +370,7 @@ export default function ServicesPage() {
   );
 }
 
-// ----- Service Form -----
+// ----- Service Form (only inputs, no Dialog) -----
 function ServiceForm({
   formData,
   setFormData,
@@ -409,100 +387,112 @@ function ServiceForm({
   return (
     <div className="space-y-4">
       {/* Service Name */}
-      <Label>Service Name</Label>
-      <Input
-        value={formData.name}
-        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-        className="w-full"
-      />
+      <div className="space-y-2">
+        <Label>Service Name</Label>
+        <Input
+          value={formData.name}
+          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+        />
+      </div>
 
       {/* Description */}
-      <Label>Description</Label>
-      <Textarea
-        value={formData.description}
-        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-        className="w-full"
-      />
+      <div className="space-y-2">
+        <Label>Description</Label>
+        <Textarea
+          value={formData.description}
+          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+        />
+      </div>
 
       {/* Availability */}
-      <Label>Availability</Label>
-      <div className="space-y-3">
-        {DAYS_OF_WEEK.map((day) => {
-          const currentDay = formData.availability?.[day.value];
-          return (
-            <div key={day.value} className="flex flex-wrap items-center gap-2 sm:gap-3">
-              <Checkbox
-                checked={!!currentDay}
-                onCheckedChange={(checked) => {
-                  setFormData((prev) => {
-                    const newAvailability = { ...prev.availability };
-                    if (checked) {
-                      newAvailability[day.value] = { start: "09:00", end: "17:00" };
-                    } else {
-                      delete newAvailability[day.value];
-                    }
-                    return { ...prev, availability: newAvailability };
-                  });
-                }}
-              />
-              <span className="w-24 sm:w-28">{day.label}</span>
-              {currentDay && (
-                <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-                  <Input
-                    type="time"
-                    value={currentDay.start}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        availability: {
-                          ...prev.availability,
-                          [day.value]: { ...prev.availability[day.value], start: e.target.value },
-                        },
-                      }))
-                    }
-                    className="w-24"
-                  />
-                  <span>-</span>
-                  <Input
-                    type="time"
-                    value={currentDay.end}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        availability: {
-                          ...prev.availability,
-                          [day.value]: { ...prev.availability[day.value], end: e.target.value },
-                        },
-                      }))
-                    }
-                    className="w-24"
-                  />
-                </div>
-              )}
-            </div>
-          );
-        })}
+      <div className="space-y-2">
+        <Label>Availability</Label>
+        <div className="space-y-3">
+          {DAYS_OF_WEEK.map((day) => {
+            const currentDay = formData.availability?.[day.value];
+            return (
+              <div key={day.value} className="flex flex-wrap items-center gap-2 sm:gap-3">
+                <Checkbox
+                  checked={!!currentDay}
+                  onCheckedChange={(checked) => {
+                    setFormData((prev) => {
+                      const newAvailability = { ...prev.availability };
+                      if (checked) {
+                        newAvailability[day.value] = { start: "09:00", end: "17:00" };
+                      } else {
+                        delete newAvailability[day.value];
+                      }
+                      return { ...prev, availability: newAvailability };
+                    });
+                  }}
+                />
+                <span className="w-24 sm:w-28">{day.label}</span>
+                {currentDay && (
+                  <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                    <Input
+                      type="time"
+                      value={currentDay.start}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          availability: {
+                            ...prev.availability,
+                            [day.value]: {
+                              ...prev.availability[day.value],
+                              start: e.target.value,
+                            },
+                          },
+                        }))
+                      }
+                      className="w-24"
+                    />
+                    <span>-</span>
+                    <Input
+                      type="time"
+                      value={currentDay.end}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          availability: {
+                            ...prev.availability,
+                            [day.value]: {
+                              ...prev.availability[day.value],
+                              end: e.target.value,
+                            },
+                          },
+                        }))
+                      }
+                      className="w-24"
+                    />
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       {/* Members Dropdown */}
-      <Label>Assign Approved Members</Label>
-      <Select onValueChange={(memberId) => addMember(memberId, "staff")} value="">
-        <SelectTrigger className="w-full">
-          <SelectValue placeholder="Select approved member" />
-        </SelectTrigger>
-        <SelectContent>
-          {members
-            .filter((m) => !formData.members?.some((sm: ServiceMember) => sm.memberId === m.id))
-            .map((m) => (
-              <SelectItem key={m.id} value={m.id}>
-                {m.name}
-              </SelectItem>
-            ))}
-        </SelectContent>
-      </Select>
+      <div className="space-y-2">
+        <Label>Assign Approved Members</Label>
+        <Select onValueChange={(memberId) => addMember(memberId, "staff")} value="">
+          <SelectTrigger>
+            <SelectValue placeholder="Select approved member" />
+          </SelectTrigger>
+          <SelectContent>
+            {members
+              .filter((m) => !formData.members?.some((sm: ServiceMember) => sm.memberId === m.id))
+              .map((m) => (
+                <SelectItem key={m.id} value={m.id}>
+                  {m.name}
+                </SelectItem>
+              ))}
+          </SelectContent>
+        </Select>
+      </div>
 
-      {/* Assigned Members List */}
-      <div className="space-y-2 mt-3">
+      {/* Assigned Members */}
+      <div className="space-y-2">
         {formData.members?.map((serviceMember) => (
           <div
             key={serviceMember.memberId}
