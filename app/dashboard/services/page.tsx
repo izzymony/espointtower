@@ -39,7 +39,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Edit, Trash2, Eye } from "lucide-react";
+import { Plus, Edit, Trash2 } from "lucide-react"; // 👈 Removed Eye
 import {
   ServicesAPI,
   Service,
@@ -73,6 +73,13 @@ interface CurrentUser {
   name?: string;
 }
 
+interface FormData {
+  name: string;
+  description: string;
+  availability: Record<string, { start: string; end: string }>;
+  members: ServiceMember[];
+}
+
 export default function ServicesPage() {
   const [services, setServices] = useState<Service[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
@@ -80,10 +87,10 @@ export default function ServicesPage() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingService, setEditingService] = useState<Service | null>(null);
 
-  const [formData, setFormData] = useState<any>({
+  const [formData, setFormData] = useState<FormData>({
     name: "",
     description: "",
-    availability: {}, // { day: { start, end } }
+    availability: {},
     members: [],
   });
 
@@ -97,6 +104,8 @@ export default function ServicesPage() {
       const user: CurrentUser = JSON.parse(userData);
       setCurrentUser(user);
       refreshServices(user.username);
+
+      // fetch approved members
       ServicesAPI.getMembersRecords(user.username, "approved")
         .then(setMembers)
         .catch(console.error);
@@ -117,6 +126,7 @@ export default function ServicesPage() {
         admin: currentUser.username,
         username: currentUser.username,
         service_name: formData.name,
+        createdBy: currentUser.username,
         data: {
           description: formData.description,
           status: "active",
@@ -167,6 +177,7 @@ export default function ServicesPage() {
         admin: currentUser.username,
         username: currentUser.username,
         service_name: formData.name,
+        createdBy: currentUser.username,
         data: {
           description: formData.description,
           status: "active",
@@ -206,16 +217,16 @@ export default function ServicesPage() {
 
     const newMember: ServiceMember = { memberId: member.id, memberName: member.name, role };
 
-    setFormData((prev: any) => ({
+    setFormData((prev) => ({
       ...prev,
-      members: [...prev.members.filter((m: ServiceMember) => m.memberId !== memberId), newMember],
+      members: [...prev.members.filter((m) => m.memberId !== memberId), newMember],
     }));
   };
 
   const removeMemberFromService = (memberId: string) => {
-    setFormData((prev: any) => ({
+    setFormData((prev) => ({
       ...prev,
-      members: prev.members.filter((m: ServiceMember) => m.memberId !== memberId),
+      members: prev.members.filter((m) => m.memberId !== memberId),
     }));
   };
 
@@ -223,7 +234,7 @@ export default function ServicesPage() {
     setEditingService(service);
     setFormData({
       name: service.name,
-      description: service.description,
+      description: service.description || "",
       availability: service.availability || {},
       members: service.members || [],
     });
@@ -254,17 +265,23 @@ export default function ServicesPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Services</h1>
-          <p className="text-muted-foreground">Manage services, assign staff members, and set availability.</p>
+          <p className="text-muted-foreground">
+            Manage services, assign staff members, and set availability.
+          </p>
         </div>
 
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
-            <Button><Plus className="mr-2 h-4 w-4" /> Add Service</Button>
+            <Button>
+              <Plus className="mr-2 h-4 w-4" /> Add Service
+            </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-w-lg">
             <DialogHeader>
               <DialogTitle>Add New Service</DialogTitle>
-              <DialogDescription>Create a new service and assign staff members.</DialogDescription>
+              <DialogDescription>
+                Create a new service and assign staff members.
+              </DialogDescription>
             </DialogHeader>
             <ServiceForm
               formData={formData}
@@ -274,7 +291,9 @@ export default function ServicesPage() {
               removeMember={removeMemberFromService}
             />
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>Cancel</Button>
+              <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                Cancel
+              </Button>
               <Button onClick={handleAddService}>Add Service</Button>
             </DialogFooter>
           </DialogContent>
@@ -284,52 +303,75 @@ export default function ServicesPage() {
       <Card>
         <CardHeader>
           <CardTitle>Services</CardTitle>
-          <CardDescription>Manage your services and assigned staff members.</CardDescription>
+          <CardDescription>
+            Manage your services and assigned staff members.
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead>Staff Members</TableHead>
-                <TableHead>Created</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {services.length === 0 ? (
-                <TableRow><TableCell colSpan={5}>No services found.</TableCell></TableRow>
-              ) : (
-                services.map((service) => (
-                  <TableRow key={service.id}>
-                    <TableCell>{service.name}</TableCell>
-                    <TableCell>{service.description}</TableCell>
-                    <TableCell>
-                      {service.members?.map((m) => (
-                        <Badge key={m.memberId} className={getRoleColor(m.role)}>{m.memberName}</Badge>
-                      ))}
-                    </TableCell>
-                    <TableCell>{service.createdAt ? new Date(service.createdAt).toLocaleDateString() : "-"}</TableCell>
-                    <TableCell className="space-x-1">
-                      <Button size="sm" onClick={() => router.push(`/dashboard/services/${service.id}`)}><Eye /></Button>
-                      <Button size="sm" variant="outline" onClick={() => openEditDialog(service)}><Edit /></Button>
-                      <Button size="sm" variant="outline" onClick={() => handleDeleteService(service.id)}><Trash2 /></Button>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[200px]">ID</TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Created By</TableHead>
+                  
+                  <TableHead>Created Date</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {services.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-6">
+                      No services found.
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                ) : (
+                  services.map((service) => (
+                    <TableRow key={service.id}>
+                      <TableCell className="font-mono text-xs">{service.id}</TableCell>
+                      <TableCell>{service.name}</TableCell>
+                      <TableCell>{service.createdBy || "-"}</TableCell>
+                     
+                      <TableCell>
+                        {service.createdAt
+                          ? new Date(service.createdAt).toLocaleDateString()
+                          : "-"}
+                      </TableCell>
+                      <TableCell className="text-right space-x-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => openEditDialog(service)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => handleDeleteService(service.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
 
       {/* Edit dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>Edit Service</DialogTitle>
-            <DialogDescription>Update service info and staff assignments.</DialogDescription>
+            <DialogDescription>
+              Update service info and staff assignments.
+            </DialogDescription>
           </DialogHeader>
           <ServiceForm
             formData={formData}
@@ -339,7 +381,9 @@ export default function ServicesPage() {
             removeMember={removeMemberFromService}
           />
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+              Cancel
+            </Button>
             <Button onClick={handleEditService}>Update Service</Button>
           </DialogFooter>
         </DialogContent>
@@ -356,8 +400,8 @@ function ServiceForm({
   addMember,
   removeMember,
 }: {
-  formData: any;
-  setFormData: React.Dispatch<React.SetStateAction<any>>;
+  formData: FormData;
+  setFormData: React.Dispatch<React.SetStateAction<FormData>>;
   members: Member[];
   addMember: (memberId: string, role: string) => void;
   removeMember: (memberId: string) => void;
@@ -390,8 +434,8 @@ function ServiceForm({
               <Checkbox
                 checked={!!currentDay}
                 onCheckedChange={(checked) => {
-                  setFormData((prev: any) => {
-                    const newAvailability = { ...(prev.availability || {}) };
+                  setFormData((prev) => {
+                    const newAvailability = { ...prev.availability };
                     if (checked) {
                       newAvailability[day.value] = { start: "09:00", end: "17:00" };
                     } else {
@@ -408,7 +452,7 @@ function ServiceForm({
                     type="time"
                     value={currentDay.start}
                     onChange={(e) =>
-                      setFormData((prev: any) => ({
+                      setFormData((prev) => ({
                         ...prev,
                         availability: {
                           ...prev.availability,
@@ -422,9 +466,8 @@ function ServiceForm({
                   <Input
                     type="time"
                     value={currentDay.end}
-                    
                     onChange={(e) =>
-                      setFormData((prev: any) => ({
+                      setFormData((prev) => ({
                         ...prev,
                         availability: {
                           ...prev.availability,
@@ -443,18 +486,13 @@ function ServiceForm({
 
       {/* Members Dropdown */}
       <Label>Assign Approved Members</Label>
-      <Select
-        onValueChange={(memberId) => addMember(memberId, "staff")}
-        value=""
-      >
+      <Select onValueChange={(memberId) => addMember(memberId, "staff")} value="">
         <SelectTrigger className="w-full">
           <SelectValue placeholder="Select approved member" />
         </SelectTrigger>
         <SelectContent>
           {members
-            .filter(
-              (m) => !formData.members?.some((sm: ServiceMember) => sm.memberId === m.id)
-            )
+            .filter((m) => !formData.members?.some((sm: ServiceMember) => sm.memberId === m.id))
             .map((m) => (
               <SelectItem key={m.id} value={m.id}>
                 {m.name}
@@ -465,7 +503,7 @@ function ServiceForm({
 
       {/* Assigned Members List */}
       <div className="space-y-2 mt-3">
-        {formData.members?.map((serviceMember: ServiceMember) => (
+        {formData.members?.map((serviceMember) => (
           <div
             key={serviceMember.memberId}
             className="flex flex-wrap items-center gap-2 p-2 bg-gray-50 rounded text-black"

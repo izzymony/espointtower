@@ -2,15 +2,14 @@
 
 import { useEffect, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Users, UserPlus, Settings, Activity } from "lucide-react"
+import { Users, UserPlus, Settings, Activity, ShieldCheck, ShieldX, Clock } from "lucide-react"
 
-// Define the Member type inline (or import from your models/services)
+// Strict Member type
 type Member = {
-  username?: string;
-  status?: string;
-  position?: string;
-  [key: string]: any;
-};
+  username: string
+  status: "active" | "pending" | "suspended" | "approved"
+  position: "admin" | "regular"
+}
 
 export default function DashboardPage() {
   const [user, setUser] = useState<{ username: string } | null>(null)
@@ -24,7 +23,12 @@ export default function DashboardPage() {
 
     const membersData = localStorage.getItem("members")
     if (membersData) {
-      setMembers(JSON.parse(membersData))
+      try {
+        const parsed: Member[] = JSON.parse(membersData)
+        setMembers(parsed)
+      } catch {
+        console.error("Invalid members data in localStorage")
+      }
     }
   }, [])
 
@@ -33,7 +37,7 @@ export default function DashboardPage() {
       title: "Total Members",
       value: members.length,
       icon: Users,
-      description: "Active members in the system",
+      description: "All members in the system",
     },
     {
       title: "Active Members",
@@ -42,16 +46,28 @@ export default function DashboardPage() {
       description: "Currently active members",
     },
     {
-      title: "Admins",
-      value: members.filter((m) => m.position === "admin").length,
-      icon: Settings,
-      description: "System administrators",
+      title: "Approved Members",
+      value: members.filter((m) => m.status === "approved").length,
+      icon: ShieldCheck,
+      description: "Members approved by admin",
+    },
+    {
+      title: "Suspended Members",
+      value: members.filter((m) => m.status === "suspended").length,
+      icon: ShieldX,
+      description: "Members who are suspended",
     },
     {
       title: "Pending Members",
       value: members.filter((m) => m.status === "pending").length,
-      icon: UserPlus,
-      description: "Members awaiting approval",
+      icon: Clock,
+      description: "Awaiting admin approval",
+    },
+    {
+      title: "Admins",
+      value: members.filter((m) => m.position === "admin").length,
+      icon: Settings,
+      description: "System administrators",
     },
   ]
 
@@ -64,12 +80,13 @@ export default function DashboardPage() {
         </p>
       </div>
 
+      {/* Stats Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {stats.map((stat) => (
           <Card key={stat.title}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-              <stat.icon className="h-4 w-4 text-muted-foreground" />
+              <stat.icon className="h-5 w-5 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stat.value}</div>
@@ -79,6 +96,7 @@ export default function DashboardPage() {
         ))}
       </div>
 
+      {/* Quick Actions */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">

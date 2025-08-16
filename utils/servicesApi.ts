@@ -9,12 +9,14 @@ export interface ServiceMember {
 export interface Service {
   id: string;
   name: string;
-  description: string;
-  availability?: string[];
+  description?: string; // optional
+  availability?: Record<string, { start: string; end: string }>;
   members?: ServiceMember[];
   createdAt?: string;
   createdBy?: string;
+  status?: string; // add this too since API gives "active"
 }
+
 
 export interface Member {
   id: string;
@@ -123,8 +125,27 @@ export const ServicesAPI = {
 
   getUnit: (serviceNameId: string) => apiRequest<Service>(`get_unit/${serviceNameId}`),
 
-  getAllService: async (staff: string) =>
-    safeArray<Service>(await apiRequest<any>(`get_all_service/${staff}`)),
+  getAllService: async (staff: string) => {
+  const raw = await apiRequest<any>(`get_all_service/${staff}`);
+  const arr = Array.isArray(raw?.msg) ? raw.msg : [];
+  return arr.map((s: any) => ({
+    id: s.service_id,
+    name: s.service_name,
+    description: "",
+    availability: {},
+    members: [],
+    createdAt: s.created,
+    createdBy: s.created_by,
+    status: s.status,
+  })) as Service[];
+},
+
+getMembersNames: async (member: string) => {
+  const raw = await apiRequest<any>(`get_members_records/${member}/approved`);
+  const arr = safeArray<any>(raw);
+  return arr.filter((m) => m.status === "approved").map((m) => m.member) as string[];
+},
+
 
   // ✅ Staff & members
   removeStaff: (payload: RemoveStaffPayload) =>
@@ -158,30 +179,16 @@ export const ServicesAPI = {
   getPayment: (paymentId: string) => apiRequest<any>(`get_payment/${paymentId}`),
 
   getMembersRecords: async (member: string, status: string) => {
-    const raw = await apiRequest<any>(
-      `get_members_records/${member}/${status}`
-    );
-    const arr = safeArray<any>(raw);
+  const data = await apiRequest<any>(`get_members_records/${member}/${status}`);
 
-    return arr
-      .filter((m) => (m.status || status) === "approved") // only approved
-      .map(
-        (m) =>
-          ({
-            id: m.id || m.memberId || m.username || m.name,
-            name: m.name || m.memberName || m.username,
-          } as Member)
-      );
-  },
+  const arr = Array.isArray(data?.msg) ? data.msg : [];
+
+  return arr.map((m: any) => ({
+    id: m.member,   // use the member name as unique id
+    name: m.member, // display name
+  })) as Member[];
+},
+
   // ✅ Members - always return only approved
- getMembersNames: async (member: string) => {
-    const raw = await apiRequest<any>(
-      `get_members_records/${member}/approved`
-    );
-    const arr = safeArray<any>(raw);
-
-    return arr
-      .filter((m) => m.status === "approved")
-      .map((m) => m.name || m.memberName || m.username) as string[];
-  },
+ 
 };
