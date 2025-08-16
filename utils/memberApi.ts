@@ -114,6 +114,17 @@ export const memberApi = {
     return res.json();
   },
 
+ async confirmMemberPasscode(memberName: string, passcode:string){
+  const payload = {member:memberName, passcode}
+
+  const res = await fetch(`${BASE_URL}/confirm_member_passcode`,{
+    method: "POST",
+    headers:{ Accept: "application/json", "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+
+  })
+ },
+
   //change member passcode
 
   async changeMemberPasscode(memberName: string,  admin: string, username:string, passcode:string){

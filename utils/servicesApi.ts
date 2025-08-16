@@ -22,11 +22,28 @@ export interface Member {
 }
 
 export interface CreateUnitPayload {
-  name: string;
-  description: string;
-  availability?: string[];
-  members: ServiceMember[];
-  createdBy: string;
+  admin: string;       // creator username
+  username: string;    // usually same as admin
+  service_name: string;
+  data: {
+    description: string;
+    status?: string;
+    timetable?: Record<string, { start: string; end: string }>;
+    staffs: {
+      [memberName: string]: {
+        status: string;
+        issuedby: string;
+        issuedtime: string;
+        role: {
+          [roleName: string]: {
+            issuedby: string;
+            status: string;
+            issuedtime: string;
+          };
+        };
+      };
+    };
+  };
 }
 
 export interface DeleteUnitPayload {
@@ -97,41 +114,74 @@ function safeArray<T>(data: any): T[] {
 
 // ===== API Methods =====
 export const ServicesAPI = {
-  // Service management
-  createUnit: (payload: CreateUnitPayload) => apiRequest<Service>("create_unit", "POST", payload),
-  deleteUnit: (payload: DeleteUnitPayload) => apiRequest<{ success: boolean }>("delete_unit", "POST", payload),
+  // ✅ Service management
+  createUnit: (payload: CreateUnitPayload) =>
+    apiRequest<{ success: boolean }>("create_unit", "POST", payload),
+
+  deleteUnit: (payload: DeleteUnitPayload) =>
+    apiRequest<{ success: boolean }>("delete_unit", "POST", payload),
+
   getUnit: (serviceNameId: string) => apiRequest<Service>(`get_unit/${serviceNameId}`),
+
   getAllService: async (staff: string) =>
     safeArray<Service>(await apiRequest<any>(`get_all_service/${staff}`)),
 
-  // Staff & members
-  removeStaff: (payload: RemoveStaffPayload) => apiRequest<{ success: boolean }>("remove_staff", "POST", payload),
+  // ✅ Staff & members
+  removeStaff: (payload: RemoveStaffPayload) =>
+    apiRequest<{ success: boolean }>("remove_staff", "POST", payload),
+
   removeMemberRole: (payload: RemoveMemberRolePayload) =>
     apiRequest<{ success: boolean }>("remove_member_role", "POST", payload),
+
   confirmMemberRole: (payload: ConfirmMemberRolePayload) =>
     apiRequest<{ success: boolean }>("confirm_member_role", "POST", payload),
+
   getMemberService: async (staff: string, member: string, status: string) =>
     safeArray<Service>(await apiRequest<any>(`get_member_service/${staff}/${member}/${status}`)),
+
   getMemberServiceRole: async (staff: string, member: string, serviceId: string) =>
     safeArray<ServiceMember>(await apiRequest<any>(`get_member_service_role/${staff}/${member}/${serviceId}`)),
 
-  // Content
-  createContent: (payload: CreateContentPayload) => apiRequest<{ success: boolean }>("create_content", "POST", payload),
+  // ✅ Content
+  createContent: (payload: CreateContentPayload) =>
+    apiRequest<{ success: boolean }>("create_content", "POST", payload),
+
   getContent: (contentId: string) => apiRequest<any>(`get_content/${contentId}`),
+
   getAllContentByService: async (serviceUnit: string) =>
     safeArray<any>(await apiRequest<any>(`get_all_content_based_service/${serviceUnit}`)),
 
-  // Payments
-  createPayment: (payload: CreatePaymentPayload) => apiRequest<{ success: boolean }>("create_payment", "POST", payload),
+  // ✅ Payments
+  createPayment: (payload: CreatePaymentPayload) =>
+    apiRequest<{ success: boolean }>("create_payment", "POST", payload),
+
   getPayment: (paymentId: string) => apiRequest<any>(`get_payment/${paymentId}`),
 
-  // Members -  Now only returns `id` & `name` of approved members
   getMembersRecords: async (member: string, status: string) => {
-    const raw = await apiRequest<any>(`get_members_records/${member}/${status}`);
+    const raw = await apiRequest<any>(
+      `get_members_records/${member}/${status}`
+    );
     const arr = safeArray<any>(raw);
-    return arr.map((m) => ({
-      id: m.id || m.memberId || m.username,
-      name: m.name || m.memberName || m.username,
-    })) as Member[];
-  }
+
+    return arr
+      .filter((m) => (m.status || status) === "approved") // only approved
+      .map(
+        (m) =>
+          ({
+            id: m.id || m.memberId || m.username || m.name,
+            name: m.name || m.memberName || m.username,
+          } as Member)
+      );
+  },
+  // ✅ Members - always return only approved
+ getMembersNames: async (member: string) => {
+    const raw = await apiRequest<any>(
+      `get_members_records/${member}/approved`
+    );
+    const arr = safeArray<any>(raw);
+
+    return arr
+      .filter((m) => m.status === "approved")
+      .map((m) => m.name || m.memberName || m.username) as string[];
+  },
 };

@@ -3,13 +3,40 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, Edit, Trash2, Eye } from "lucide-react";
@@ -18,11 +45,9 @@ import {
   Service,
   Member,
   ServiceMember,
-  CreateUnitPayload,
-  RemoveMemberRolePayload,
-  ConfirmMemberRolePayload
 } from "@/utils/servicesApi";
 
+// Staff roles
 const STAFF_ROLES = [
   { value: "bookings", label: "Bookings" },
   { value: "admin", label: "Admin" },
@@ -32,6 +57,7 @@ const STAFF_ROLES = [
   { value: "manager", label: "Manager" },
 ] as const;
 
+// Days of week
 const DAYS_OF_WEEK = [
   { value: "monday", label: "Monday" },
   { value: "tuesday", label: "Tuesday" },
@@ -53,13 +79,14 @@ export default function ServicesPage() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingService, setEditingService] = useState<Service | null>(null);
-  const [formData, setFormData] = useState<CreateUnitPayload>({
+
+  const [formData, setFormData] = useState<any>({
     name: "",
     description: "",
-    availability: [],
+    availability: {}, // { day: { start, end } }
     members: [],
-    createdBy: "",
   });
+
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
 
   const router = useRouter();
@@ -69,8 +96,6 @@ export default function ServicesPage() {
     if (userData) {
       const user: CurrentUser = JSON.parse(userData);
       setCurrentUser(user);
-      setFormData((prev) => ({ ...prev, createdBy: user.username }));
-
       refreshServices(user.username);
       ServicesAPI.getMembersRecords(user.username, "approved")
         .then(setMembers)
@@ -88,10 +113,38 @@ export default function ServicesPage() {
   const handleAddService = async () => {
     if (!formData.name || !formData.description || !currentUser) return;
     try {
-      await ServicesAPI.createUnit(formData);
+      const payload = {
+        admin: currentUser.username,
+        username: currentUser.username,
+        service_name: formData.name,
+        data: {
+          description: formData.description,
+          status: "active",
+          timetable: formData.availability,
+          staffs: Object.fromEntries(
+            formData.members.map((m: ServiceMember) => [
+              m.memberName,
+              {
+                status: "approved",
+                issuedby: currentUser.username,
+                issuedtime: new Date().toISOString(),
+                role: {
+                  [m.role]: {
+                    issuedby: currentUser.username,
+                    status: "active",
+                    issuedtime: new Date().toISOString(),
+                  },
+                },
+              },
+            ])
+          ),
+        },
+      };
+
+      await ServicesAPI.createUnit(payload);
       await refreshServices();
       setIsAddDialogOpen(false);
-      setFormData({ name: "", description: "", availability: [], members: [], createdBy: currentUser.username });
+      setFormData({ name: "", description: "", availability: {}, members: [] });
     } catch (err) {
       console.error(err);
     }
@@ -110,10 +163,35 @@ export default function ServicesPage() {
   const handleEditService = async () => {
     if (!editingService || !currentUser) return;
     try {
-      await ServicesAPI.createUnit({
-        ...formData,
-        createdBy: currentUser.username,
-      });
+      const payload = {
+        admin: currentUser.username,
+        username: currentUser.username,
+        service_name: formData.name,
+        data: {
+          description: formData.description,
+          status: "active",
+          timetable: formData.availability,
+          staffs: Object.fromEntries(
+            formData.members.map((m: ServiceMember) => [
+              m.memberName,
+              {
+                status: "approved",
+                issuedby: currentUser.username,
+                issuedtime: new Date().toISOString(),
+                role: {
+                  [m.role]: {
+                    issuedby: currentUser.username,
+                    status: "active",
+                    issuedtime: new Date().toISOString(),
+                  },
+                },
+              },
+            ])
+          ),
+        },
+      };
+
+      await ServicesAPI.createUnit(payload);
       await refreshServices();
       setIsEditDialogOpen(false);
       setEditingService(null);
@@ -122,34 +200,22 @@ export default function ServicesPage() {
     }
   };
 
-  const addMemberToService = async (memberId: string, role: string, serviceId?: string) => {
+  const addMemberToService = (memberId: string, role: string) => {
     const member = members.find((m) => m.id === memberId);
     if (!member) return;
 
     const newMember: ServiceMember = { memberId: member.id, memberName: member.name, role };
 
-    if (serviceId && currentUser) {
-      const payload: ConfirmMemberRolePayload = { memberId: member.id, role };
-      await ServicesAPI.confirmMemberRole(payload);
-      await refreshServices();
-    }
-
-    setFormData((prev) => ({
+    setFormData((prev: any) => ({
       ...prev,
-      members: [...prev.members!.filter((m) => m.memberId !== memberId), newMember],
+      members: [...prev.members.filter((m: ServiceMember) => m.memberId !== memberId), newMember],
     }));
   };
 
-  const removeMemberFromService = async (memberId: string, serviceId?: string) => {
-    if (serviceId && currentUser) {
-      const payload: RemoveMemberRolePayload = { memberId, role: "" };
-      await ServicesAPI.removeMemberRole(payload);
-      await refreshServices();
-    }
-
-    setFormData((prev) => ({
+  const removeMemberFromService = (memberId: string) => {
+    setFormData((prev: any) => ({
       ...prev,
-      members: prev.members!.filter((m) => m.memberId !== memberId),
+      members: prev.members.filter((m: ServiceMember) => m.memberId !== memberId),
     }));
   };
 
@@ -158,22 +224,28 @@ export default function ServicesPage() {
     setFormData({
       name: service.name,
       description: service.description,
-      availability: service.availability || [],
+      availability: service.availability || {},
       members: service.members || [],
-      createdBy: currentUser?.username || "",
     });
     setIsEditDialogOpen(true);
   };
 
   const getRoleColor = (role: string) => {
     switch (role) {
-      case "admin": return "bg-purple-100 text-purple-800";
-      case "bookings": return "bg-blue-100 text-blue-800";
-      case "content-creator": return "bg-green-100 text-green-800";
-      case "customer-service": return "bg-yellow-100 text-yellow-800";
-      case "technical-support": return "bg-red-100 text-red-800";
-      case "manager": return "bg-indigo-100 text-indigo-800";
-      default: return "bg-gray-100 text-gray-800";
+      case "admin":
+        return "bg-purple-100 text-purple-800";
+      case "bookings":
+        return "bg-blue-100 text-blue-800";
+      case "content-creator":
+        return "bg-green-100 text-green-800";
+      case "customer-service":
+        return "bg-yellow-100 text-yellow-800";
+      case "technical-support":
+        return "bg-red-100 text-red-800";
+      case "manager":
+        return "bg-indigo-100 text-indigo-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
@@ -184,6 +256,7 @@ export default function ServicesPage() {
           <h1 className="text-3xl font-bold">Services</h1>
           <p className="text-muted-foreground">Manage services, assign staff members, and set availability.</p>
         </div>
+
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
             <Button><Plus className="mr-2 h-4 w-4" /> Add Service</Button>
@@ -251,6 +324,7 @@ export default function ServicesPage() {
         </CardContent>
       </Card>
 
+      {/* Edit dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -261,8 +335,8 @@ export default function ServicesPage() {
             formData={formData}
             setFormData={setFormData}
             members={members}
-            addMember={(memberId, role) => addMemberToService(memberId, role, editingService?.id)}
-            removeMember={(memberId) => removeMemberFromService(memberId, editingService?.id)}
+            addMember={addMemberToService}
+            removeMember={removeMemberFromService}
           />
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancel</Button>
@@ -274,86 +348,155 @@ export default function ServicesPage() {
   );
 }
 
+// ----- Service Form -----
 function ServiceForm({
   formData,
   setFormData,
   members,
   addMember,
-  removeMember
+  removeMember,
 }: {
-  formData: CreateUnitPayload;
-  setFormData: React.Dispatch<React.SetStateAction<CreateUnitPayload>>;
+  formData: any;
+  setFormData: React.Dispatch<React.SetStateAction<any>>;
   members: Member[];
   addMember: (memberId: string, role: string) => void;
   removeMember: (memberId: string) => void;
 }) {
   return (
-    <>
+    <div className="space-y-4">
+      {/* Service Name */}
       <Label>Service Name</Label>
-      <Input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
+      <Input
+        value={formData.name}
+        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+        className="w-full"
+      />
 
+      {/* Description */}
       <Label>Description</Label>
-      <Textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} />
+      <Textarea
+        value={formData.description}
+        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+        className="w-full"
+      />
 
+      {/* Availability */}
       <Label>Availability</Label>
-      <div className="grid grid-cols-2 gap-2">
-        {DAYS_OF_WEEK.map((day) => (
-          <div key={day.value} className="flex items-center gap-2">
-            <Checkbox
-              checked={formData.availability?.includes(day.value)}
-              onCheckedChange={(checked) => {
-                setFormData((prev) => ({
-                  ...prev,
-                  availability: checked
-                    ? [...(prev.availability || []), day.value]
-                    : (prev.availability || []).filter((d) => d !== day.value),
-                }));
-              }}
-            />
-            {day.label}
-          </div>
-        ))}
+      <div className="space-y-3">
+        {DAYS_OF_WEEK.map((day) => {
+          const currentDay = formData.availability?.[day.value];
+          return (
+            <div key={day.value} className="flex flex-wrap items-center gap-2 sm:gap-3">
+              <Checkbox
+                checked={!!currentDay}
+                onCheckedChange={(checked) => {
+                  setFormData((prev: any) => {
+                    const newAvailability = { ...(prev.availability || {}) };
+                    if (checked) {
+                      newAvailability[day.value] = { start: "09:00", end: "17:00" };
+                    } else {
+                      delete newAvailability[day.value];
+                    }
+                    return { ...prev, availability: newAvailability };
+                  });
+                }}
+              />
+              <span className="w-24 sm:w-28">{day.label}</span>
+              {currentDay && (
+                <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                  <Input
+                    type="time"
+                    value={currentDay.start}
+                    onChange={(e) =>
+                      setFormData((prev: any) => ({
+                        ...prev,
+                        availability: {
+                          ...prev.availability,
+                          [day.value]: { ...prev.availability[day.value], start: e.target.value },
+                        },
+                      }))
+                    }
+                    className="w-24"
+                  />
+                  <span>-</span>
+                  <Input
+                    type="time"
+                    value={currentDay.end}
+                    
+                    onChange={(e) =>
+                      setFormData((prev: any) => ({
+                        ...prev,
+                        availability: {
+                          ...prev.availability,
+                          [day.value]: { ...prev.availability[day.value], end: e.target.value },
+                        },
+                      }))
+                    }
+                    className="w-24"
+                  />
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
 
+      {/* Members Dropdown */}
       <Label>Assign Approved Members</Label>
-      <Select onValueChange={(memberId) => addMember(memberId, "staff")}>
-        <SelectTrigger>
+      <Select
+        onValueChange={(memberId) => addMember(memberId, "staff")}
+        value=""
+      >
+        <SelectTrigger className="w-full">
           <SelectValue placeholder="Select approved member" />
         </SelectTrigger>
         <SelectContent>
           {members
-            .filter((m) => !formData.members?.some((sm) => sm.memberId === m.id))
-            .map((member) => (
-              <SelectItem key={member.id} value={member.id}>
-                {member.name}
+            .filter(
+              (m) => !formData.members?.some((sm: ServiceMember) => sm.memberId === m.id)
+            )
+            .map((m) => (
+              <SelectItem key={m.id} value={m.id}>
+                {m.name}
               </SelectItem>
             ))}
         </SelectContent>
       </Select>
 
-      <div className="space-y-2 mt-2">
-        {formData.members?.map((serviceMember) => (
-          <div key={serviceMember.memberId} className="flex items-center gap-2 p-2 bg-gray-50 rounded">
-            <span className="flex-1">{serviceMember.memberName}</span>
+      {/* Assigned Members List */}
+      <div className="space-y-2 mt-3">
+        {formData.members?.map((serviceMember: ServiceMember) => (
+          <div
+            key={serviceMember.memberId}
+            className="flex flex-wrap items-center gap-2 p-2 bg-gray-50 rounded text-black"
+          >
+            <span className="flex-1 min-w-[120px]">{serviceMember.memberName}</span>
             <Select
               value={serviceMember.role}
               onValueChange={(role) => addMember(serviceMember.memberId, role)}
             >
-              <SelectTrigger className="w-40">
+              <SelectTrigger className="w-full sm:w-40">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 {STAFF_ROLES.map((role) => (
-                  <SelectItem key={role.value} value={role.value}>{role.label}</SelectItem>
+                  <SelectItem key={role.value} value={role.value}>
+                    {role.label}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            <Button variant="outline" size="sm" onClick={() => removeMember(serviceMember.memberId)}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => removeMember(serviceMember.memberId)}
+              className="w-full sm:w-auto"
+            >
               <Trash2 className="h-4 w-4" />
             </Button>
           </div>
         ))}
       </div>
-    </>
+    </div>
   );
 }
