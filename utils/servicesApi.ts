@@ -3,7 +3,7 @@ const BASE_URL = "https://espoint.onrender.com/espoint";
 export interface ServiceMember {
   memberId: string;
   memberName: string;
-  role: string;
+  role: string[];
 }
 
 export interface Service {
@@ -49,22 +49,26 @@ export interface CreateUnitPayload {
 }
 
 export interface DeleteUnitPayload {
-  serviceId: string;
-  staff: string;
+  service_id: string;
+  username: string;
 }
 
 export interface RemoveStaffPayload {
-  staffId: string;
-  serviceId: string;
+  service_id: string;
+  username: string;
+  staff: string;
 }
 
 export interface RemoveMemberRolePayload {
-  memberId: string;
+  service_id: string;
+  username: string;
+  staff: string;
   role: string;
 }
 
 export interface ConfirmMemberRolePayload {
-  memberId: string;
+  service_id: string;
+  staff: string;
   role: string;
 }
 

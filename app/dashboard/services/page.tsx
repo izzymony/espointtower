@@ -1,3 +1,5 @@
+
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -76,7 +78,7 @@ interface FormData {
   name: string;
   description: string;
   availability: Record<string, { start: string; end: string }>;
-  members: ServiceMember[];
+  members: ServiceMember[]; // ServiceMember now has 'roles: string[]'
 }
 
 export default function ServicesPage() {
@@ -137,13 +139,16 @@ export default function ServicesPage() {
                 status: "approved",
                 issuedby: currentUser.username,
                 issuedtime: new Date().toISOString(),
-                role: {
-                  [m.role]: {
-                    issuedby: currentUser.username,
-                    status: "active",
-                    issuedtime: new Date().toISOString(),
-                  },
-                },
+                role: Object.fromEntries(
+                  (m.role || []).map((role) => [
+                    role,
+                    {
+                      issuedby: currentUser.username,
+                      status: "active",
+                      issuedtime: new Date().toISOString(),
+                    },
+                  ])
+                ),
               },
             ])
           ),
@@ -162,7 +167,7 @@ export default function ServicesPage() {
   const handleDeleteService = async (id: string) => {
     if (!currentUser) return;
     try {
-      await ServicesAPI.deleteUnit({ serviceId: id, staff: currentUser.username });
+      await ServicesAPI.deleteUnit({ service_id: id, username: currentUser.username });
       await refreshServices();
     } catch (err) {
       console.error(err);
@@ -188,13 +193,16 @@ export default function ServicesPage() {
                 status: "approved",
                 issuedby: currentUser.username,
                 issuedtime: new Date().toISOString(),
-                role: {
-                  [m.role]: {
-                    issuedby: currentUser.username,
-                    status: "active",
-                    issuedtime: new Date().toISOString(),
-                  },
-                },
+                role: Object.fromEntries(
+                  (m.role || []).map((role) => [
+                    role,
+                    {
+                      issuedby: currentUser.username,
+                      status: "active",
+                      issuedtime: new Date().toISOString(),
+                    },
+                  ])
+                ),
               },
             ])
           ),
@@ -210,12 +218,11 @@ export default function ServicesPage() {
     }
   };
 
-  const addMemberToService = (memberId: string, role: string) => {
+  // New addMemberToService for multi-role
+  const addMemberToService = (memberId: string, role: string[] = []) => {
     const member = members.find((m) => m.id === memberId);
     if (!member) return;
-
     const newMember: ServiceMember = { memberId: member.id, memberName: member.name, role };
-
     setFormData((prev) => ({
       ...prev,
       members: [...prev.members.filter((m) => m.memberId !== memberId), newMember],
@@ -231,13 +238,31 @@ export default function ServicesPage() {
 
   const openEditDialog = (service: Service) => {
     setEditingService(service);
+    // Convert any possible legacy role: string into roles: string[]
+    const members: ServiceMember[] = Array.isArray(service.members)
+      ? service.members.map((m: any) =>
+          "role" in m && !Array.isArray(m.role)
+            ? { ...m, roles: m.role ? [m.role] : [] }
+            : m
+        )
+      : [];
     setFormData({
       name: service.name,
       description: service.description || "",
       availability: service.availability || {},
-      members: service.members || [],
+      members,
     });
     setIsEditDialogOpen(true);
+  };
+
+  // This function is used to update only the roles of a member
+  const updateMemberRoles = (memberId: string, newRoles: string[]) => {
+    setFormData((prev) => ({
+      ...prev,
+      members: prev.members.map((m) =>
+        m.memberId === memberId ? { ...m, roles: newRoles } : m
+      ),
+    }));
   };
 
   return (
@@ -269,6 +294,7 @@ export default function ServicesPage() {
               members={members}
               addMember={addMemberToService}
               removeMember={removeMemberFromService}
+              updateMemberRoles={updateMemberRoles}
             />
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
@@ -357,6 +383,7 @@ export default function ServicesPage() {
             members={members}
             addMember={addMemberToService}
             removeMember={removeMemberFromService}
+            updateMemberRoles={updateMemberRoles}
           />
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
@@ -377,12 +404,14 @@ function ServiceForm({
   members,
   addMember,
   removeMember,
+  updateMemberRoles,
 }: {
   formData: FormData;
   setFormData: React.Dispatch<React.SetStateAction<FormData>>;
   members: Member[];
-  addMember: (memberId: string, role: string) => void;
+  addMember: (memberId: string, roles?: string[]) => void;
   removeMember: (memberId: string) => void;
+  updateMemberRoles: (memberId: string, newRoles: string[]) => void;
 }) {
   return (
     <div className="space-y-4">
@@ -475,13 +504,18 @@ function ServiceForm({
       {/* Members Dropdown */}
       <div className="space-y-2">
         <Label>Assign Approved Members</Label>
-        <Select onValueChange={(memberId) => addMember(memberId, "staff")} value="">
+        <Select
+          onValueChange={(memberId) => addMember(memberId, [])}
+          value=""
+        >
           <SelectTrigger>
             <SelectValue placeholder="Select approved member" />
           </SelectTrigger>
           <SelectContent>
             {members
-              .filter((m) => !formData.members?.some((sm: ServiceMember) => sm.memberId === m.id))
+              .filter(
+                (m) => !formData.members?.some((sm: ServiceMember) => sm.memberId === m.id)
+              )
               .map((m) => (
                 <SelectItem key={m.id} value={m.id}>
                   {m.name}
@@ -499,21 +533,23 @@ function ServiceForm({
             className="flex flex-wrap items-center gap-2 p-2 bg-gray-50 rounded text-black"
           >
             <span className="flex-1 min-w-[120px]">{serviceMember.memberName}</span>
-            <Select
-              value={serviceMember.role}
-              onValueChange={(role) => addMember(serviceMember.memberId, role)}
-            >
-              <SelectTrigger className="w-full sm:w-40">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {STAFF_ROLES.map((role) => (
-                  <SelectItem key={role.value} value={role.value}>
-                    {role.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {/* Multi-select UI for roles */}
+            <div className="flex flex-wrap gap-2">
+              {STAFF_ROLES.map((role) => (
+                <label key={role.value} className="flex items-center gap-1">
+                  <Checkbox
+                    checked={serviceMember.role?.includes(role.value)}
+                    onCheckedChange={(checked) => {
+                      const newRoles = checked
+                        ? [...(serviceMember.role || []), role.value]
+                        : (serviceMember.role || []).filter((r) => r !== role.value);
+                      updateMemberRoles(serviceMember.memberId, Array.from(new Set(newRoles)));
+                    }}
+                  />
+                  <span>{role.label}</span>
+                </label>
+              ))}
+            </div>
             <Button
               variant="outline"
               size="sm"
