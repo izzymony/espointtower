@@ -3,7 +3,8 @@ const BASE_URL = "https://espoint.onrender.com/espoint";
 export interface ServiceMember {
   memberId: string;
   memberName: string;
-  role: string[];
+
+  roles: string[];
 }
 
 export interface Service {
@@ -21,6 +22,7 @@ export interface Service {
 export interface Member {
   id: string;
   name: string;
+  
 }
 
 export interface CreateUnitPayload {
@@ -127,22 +129,55 @@ export const ServicesAPI = {
   deleteUnit: (payload: DeleteUnitPayload) =>
     apiRequest<{ success: boolean }>("delete_unit", "POST", payload),
 
-  getUnit: (serviceNameId: string) => apiRequest<Service>(`get_unit/${serviceNameId}`),
+getUnit: async (serviceId: string): Promise<Service> => {
+  const raw = await apiRequest<any>(`get_unit/${serviceId}`);
+  const s = raw?.msg;
 
-  getAllService: async (staff: string) => {
+  const normalized: Service = {
+    id: s.service_id,
+    name: s.service_name,
+    description: s.store?.description ?? "",
+    availability: s.store?.timetable ?? {},
+    createdAt: s.created,
+    createdBy: s.created_by,
+    status: s.store?.status || s.status || "active",
+    members: s.store?.staffs
+      ? Object.entries(s.store.staffs).map(([memberName, staff]: [string, any]) => ({
+          memberId: memberName,
+          memberName,
+         
+          roles: staff.role ? Object.keys(staff.role) : [], // ✅ extract role names
+        }))
+      : [],
+  };
+
+  return normalized;
+},
+
+
+
+getAllService: async (staff: string): Promise<Service[]> => {
   const raw = await apiRequest<any>(`get_all_service/${staff}`);
   const arr = Array.isArray(raw?.msg) ? raw.msg : [];
+
   return arr.map((s: any) => ({
     id: s.service_id,
     name: s.service_name,
-    description: "",
-    availability: {},
-    members: [],
+    description: s.store?.description ?? "", // some APIs may include store
+    availability: s.store?.timetable ?? {},
+    members: s.store?.staffs
+      ? Object.entries(s.store.staffs).map(([memberName, staff]: [string, any]) => ({
+          memberId: memberName,
+          memberName,
+          roles: staff.role ? Object.keys(staff.role) : [],
+        }))
+      : [],
     createdAt: s.created,
     createdBy: s.created_by,
     status: s.status,
-  })) as Service[];
+  }));
 },
+
 
 getMembersNames: async (member: string) => {
   const raw = await apiRequest<any>(`get_members_records/${member}/approved`);
@@ -175,7 +210,7 @@ getMembersNames: async (member: string) => {
 
   getAllContentByService: async (serviceUnit: string) =>
     safeArray<any>(await apiRequest<any>(`get_all_content_based_service/${serviceUnit}`)),
-
+ 
   // ✅ Payments
   createPayment: (payload: CreatePaymentPayload) =>
     apiRequest<{ success: boolean }>("create_payment", "POST", payload),

@@ -97,7 +97,7 @@ export default function ServicesPage() {
 
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
 
-  const router = useRouter();
+const router = useRouter()
 
   useEffect(() => {
     const userData = localStorage.getItem("user");
@@ -140,7 +140,7 @@ export default function ServicesPage() {
                 issuedby: currentUser.username,
                 issuedtime: new Date().toISOString(),
                 role: Object.fromEntries(
-                  (m.role || []).map((role) => [
+                  (m.roles || []).map((role) => [
                     role,
                     {
                       issuedby: currentUser.username,
@@ -194,7 +194,7 @@ export default function ServicesPage() {
                 issuedby: currentUser.username,
                 issuedtime: new Date().toISOString(),
                 role: Object.fromEntries(
-                  (m.role || []).map((role) => [
+                  (m.roles || []).map((role) => [
                     role,
                     {
                       issuedby: currentUser.username,
@@ -220,14 +220,22 @@ export default function ServicesPage() {
 
   // New addMemberToService for multi-role
   const addMemberToService = (memberId: string, role: string[] = []) => {
-    const member = members.find((m) => m.id === memberId);
-    if (!member) return;
-    const newMember: ServiceMember = { memberId: member.id, memberName: member.name, role };
-    setFormData((prev) => ({
-      ...prev,
-      members: [...prev.members.filter((m) => m.memberId !== memberId), newMember],
-    }));
+  const member = members.find((m) => m.id === memberId);
+  if (!member) return;
+  const newMember: ServiceMember = { 
+    memberId: member.id, 
+    memberName: member.name,
+            // <-- REQUIRED!
+    roles: role 
   };
+  setFormData((prev) => ({
+    ...prev,
+    members: [
+      ...prev.members.filter((m) => m.memberId !== memberId), 
+      newMember
+    ],
+  }));
+};
 
   const removeMemberFromService = (memberId: string) => {
     setFormData((prev) => ({
@@ -236,24 +244,45 @@ export default function ServicesPage() {
     }));
   };
 
-  const openEditDialog = (service: Service) => {
-    setEditingService(service);
-    // Convert any possible legacy role: string into roles: string[]
-    const members: ServiceMember[] = Array.isArray(service.members)
-      ? service.members.map((m: any) =>
-          "role" in m && !Array.isArray(m.role)
-            ? { ...m, roles: m.role ? [m.role] : [] }
-            : m
-        )
-      : [];
-    setFormData({
-      name: service.name,
-      description: service.description || "",
-      availability: service.availability || {},
-      members,
-    });
-    setIsEditDialogOpen(true);
-  };
+ const openEditDialog = (service: Service) => {
+  setEditingService(service);
+
+  // Helper type covers both possible shapes
+  type PossibleMember = 
+    | ServiceMember                          // modern: { memberId, memberName, roles }
+    | { memberId: string; memberName: string; role?: string }; // legacy
+
+  // Normalize members array so all have `roles: string[]`
+  const members: ServiceMember[] = Array.isArray(service.members)
+    ? service.members.map((m: PossibleMember) => {
+        if ('roles' in m && Array.isArray(m.roles)) {
+          return m;
+        } else if ('role' in m && typeof m.role === 'string') {
+          return {
+            memberId: m.memberId,
+            memberName: m.memberName,
+           
+            roles: m.role ? [m.role] : [],
+          };
+        }
+        // fallback for empty or malformed
+        return {
+          memberId: m.memberId,
+          memberName: m.memberName,
+          
+          roles: [],
+        };
+      })
+    : [];
+
+  setFormData({
+    name: service.name,
+    description: service.description || "",
+    availability: service.availability || {},
+    members,
+  });
+  setIsEditDialogOpen(true);
+};
 
   // This function is used to update only the roles of a member
   const updateMemberRoles = (memberId: string, newRoles: string[]) => {
@@ -334,7 +363,7 @@ export default function ServicesPage() {
                   </TableRow>
                 ) : (
                   services.map((service) => (
-                    <TableRow key={service.id}>
+                    <TableRow key={service.id} className="cursor-pointer" onClick={() => router.push(`/dashboard/services/${service.id}`)}>
                       <TableCell className="font-mono text-xs">{service.id}</TableCell>
                       <TableCell>{service.name}</TableCell>
                       <TableCell>{service.createdBy || "-"}</TableCell>
@@ -538,11 +567,11 @@ function ServiceForm({
               {STAFF_ROLES.map((role) => (
                 <label key={role.value} className="flex items-center gap-1">
                   <Checkbox
-                    checked={serviceMember.role?.includes(role.value)}
+                    checked={serviceMember.roles?.includes(role.value)}
                     onCheckedChange={(checked) => {
                       const newRoles = checked
-                        ? [...(serviceMember.role || []), role.value]
-                        : (serviceMember.role || []).filter((r) => r !== role.value);
+                        ? [...(serviceMember.roles || []), role.value]
+                        : (serviceMember.roles || []).filter((r) => r !== role.value);
                       updateMemberRoles(serviceMember.memberId, Array.from(new Set(newRoles)));
                     }}
                   />
