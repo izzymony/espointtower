@@ -116,7 +116,7 @@ const router = useRouter()
   const refreshServices = async (username?: string) => {
     const staff = username || currentUser?.username;
     if (!staff) return;
-    const data = await ServicesAPI.getAllService(staff);
+    const data = await ServicesAPI.getAllService();
     setServices(data);
   };
 
