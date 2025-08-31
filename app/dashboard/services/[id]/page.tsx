@@ -5,7 +5,7 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/com
 import { ServicesAPI, Service, ServiceMember, ServiceRole, ServiceStaff, UpdateUnitPayload, RemoveStaffPayload } from "@/utils/servicesApi";
 import { memberApi } from "@/utils/memberApi";
 import { Button } from '@/components/ui/button';
-import { Plus, Trash2, ArrowLeft, Clock, Calendar, Users, Upload } from 'lucide-react';
+import { Plus, Trash2, ArrowLeft, Clock, Calendar, Users } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 
 interface CurrentUser {
@@ -188,9 +188,7 @@ const ServiceDetailPage = () => {
     setNewMembers(updated);
   };
 
-  const handleRemoveStaff = (member: ServiceMember) => {
-    setConfirmPopup({ type: "removeStaff", member });
-  };
+
 
   const doRemoveStaff = async (member: ServiceMember) => {
   setActionLoading("remove:" + member.memberId);
@@ -307,8 +305,12 @@ const ServiceDetailPage = () => {
       setSelectedMember("");
       setSelectedRoles([]);
       await refreshService();
-    } catch (err: any) {
-      setAddError(err?.message || "Failed to add staff");
+    } catch (err) {
+      if (err instanceof Error) {
+        setAddError(err.message);
+      } else {
+        setAddError("Failed to add staff");
+      }
     }
     setAddActionLoading(false);
   };
@@ -395,7 +397,7 @@ const ServiceDetailPage = () => {
     setEditLoading(false);
   };
 
-  const handleDeleteService = async (id: string) => {
+  /* const handleDeleteService = async (id: string) => {
     if (!currentUser || !currentUser.username) return;
     try {
       await ServicesAPI.deleteUnit({ service_id: id, username: currentUser.username });
@@ -403,7 +405,7 @@ const ServiceDetailPage = () => {
     } catch (err) {
       alert("Failed to delete service.");
     }
-  };
+  }; */
 
   if (loading) {
     return (
@@ -418,7 +420,7 @@ const ServiceDetailPage = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold mb-2">Service Not Found</h2>
-          <p className="text-muted-foreground mb-4">The service you're looking for doesn't exist.</p>
+          <p className="text-muted-foreground mb-4">The service you&apos;re looking for doesn&apos;t exist.</p>
           <Button onClick={() => router.push("/dashboard/services")}>
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Services

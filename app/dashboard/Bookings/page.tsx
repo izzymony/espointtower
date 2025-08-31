@@ -33,6 +33,7 @@ export default function BookingsPage() {
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const[, setEditError] = useState('')
 
   // ✅ Fetch services on mount
   useEffect(() => {
@@ -108,11 +109,12 @@ export default function BookingsPage() {
         service_unit: "",
         service: ""
       });
-    } catch (err: any) {
-      console.error("Booking failed", err);
-      setMessage("❌ Failed to create booking: " + (err.message || ""));
-    } finally {
-      setLoading(false);
+    }catch (err: unknown) {
+      if (err instanceof Error) {
+        setEditError(err.message);
+      } else {
+        setEditError("Failed to update service");
+      }
     }
   };
 

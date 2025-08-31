@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
+import Image from "next/image";
 interface RentalItem {
   item: string;
   quantity: string;
@@ -21,7 +21,7 @@ export default function UploadServicePage() {
   const [services, setServices] = useState<ServiceListItem[]>([]);
   const [selectedService, setSelectedService] = useState("");
   const [createdBy, setCreatedBy] = useState("");
-  const [serviceName, setServiceName] = useState("");
+  const [serviceName, ] = useState("");
   const [description, setDescription] = useState("");
   const [hoursStart, setHoursStart] = useState("");
   const [hoursEnd, setHoursEnd] = useState("");
@@ -163,14 +163,18 @@ export default function UploadServicePage() {
     };
 
     try {
-      console.log("Submitting payload:", payload);
-      await ServicesAPI.createServiceContent(payload);
-      setMessage("✅ Service content uploaded successfully!");
-    } catch (err: any) {
-      console.error("Upload failed", err);
-      setMessage("❌ Failed to upload content: " + (err.message || ""));
+    console.log("Submitting payload:", payload);
+    await ServicesAPI.createServiceContent(payload);
+    setMessage("✅ Service content uploaded successfully!");
+    } catch (err) {
+    console.error("Upload failed", err);
+    if (err instanceof Error) {
+    setMessage("❌ Failed to upload content: " + err.message);
+    } else {
+    setMessage("❌ Failed to upload content");
+    }
     } finally {
-      setLoading(false);
+    setLoading(false);
     }
   };
 
@@ -246,7 +250,7 @@ export default function UploadServicePage() {
                       key={idx}
                       className="w-20 h-20 border rounded overflow-hidden flex items-center justify-center"
                     >
-                      <img
+                      <Image
                         src={url}
                         alt={`logo-${idx}`}
                         className="object-cover w-full h-full"
