@@ -185,6 +185,15 @@ export interface CreateBookingPayload {
   service: string;
 }
 
+export interface CreateBookingRequest{
+  service: string;
+  service_unit: string;
+  username: string;
+  from: "internal" | "external";
+  service_id: string;
+  data: CreateBookingPayload;
+}
+
 export interface ApiResponse<T = unknown> {
   success: boolean;
   msg?: T;
@@ -336,7 +345,7 @@ export const ServicesAPI = {
     return safeArray<ServiceMember>(raw);
   },
 
-  createBooking: (payload: CreateBookingPayload) =>
+  createBooking: (payload: CreateBookingRequest) =>
     apiRequest<ApiResponse>("create_booking", "POST", payload),
 
   getBooking: (bookingId: string) =>
