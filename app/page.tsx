@@ -1,105 +1,18 @@
-"use client"
+import React from 'react'
+import Signin from "@/app/components/Signin"
 
-import type React from "react"
-
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Eye, EyeOff, RefreshCw } from "lucide-react"
-
-export default function SignInPage() {
-  const [username, setUsername] = useState("")
-  const [passcode, setPasscode] = useState("")
-  const [showPasscode, setShowPasscode] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const router = useRouter()
-
-  const generateRandomPasscode = () => {
-    const randomPasscode = Math.random().toString(36).substring(2, 10).toUpperCase()
-    setPasscode(randomPasscode)
-  }
-
-  const handleSignIn = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-
-    // Simulate authentication
-    setTimeout(() => {
-      if (username && passcode) {
-        // Store user session (in a real app, you'd use proper authentication)
-        localStorage.setItem("user", JSON.stringify({ username, passcode }))
-        router.push("/dashboard")
-      }
-      setIsLoading(false)
-    }, 1000)
-  }
-
+const page = () => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">Sign In</CardTitle>
-          <CardDescription className="text-center">
-            Enter your credentials to access the member management system
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSignIn} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
-              <Input
-                id="username"
-                type="text"
-                placeholder="Enter your username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="passcode">Passcode</Label>
-              <div className="relative">
-                <Input
-                  id="passcode"
-                  type={showPasscode ? "text" : "password"}
-                  placeholder="Enter your passcode"
-                  value={passcode}
-                  onChange={(e) => setPasscode(e.target.value)}
-                  required
-                  className="pr-20"
-                />
-                <div className="absolute right-1 top-1/2 -translate-y-1/2 flex gap-1">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="h-7 w-7 p-0"
-                    onClick={() => setShowPasscode(!showPasscode)}
-                  >
-                    {showPasscode ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="h-7 w-7 p-0"
-                    onClick={generateRandomPasscode}
-                    title="Generate random passcode"
-                  >
-                    <RefreshCw className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Signing in..." : "Sign In"}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+    <div>
+      <Signin />
+      <div className="text-center text-gray-500 mt-4">
+        <p>Welcome to the Sign In page. Please enter your credentials to continue.</p>
+      </div>
+      <div className="text-center text-gray-500 mt-2">
+        <p>If you don&apos;t have an account, please contact your administrator.</p>
+      </div>
     </div>
   )
 }
+
+export default page
