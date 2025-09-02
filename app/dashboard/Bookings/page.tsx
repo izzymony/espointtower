@@ -13,6 +13,11 @@ interface Service {
   name: string;
 }
 
+interface ApiService {
+  service_id: string;
+  service_name: string;
+}
+
 export default function BookingsPage() {
   const [formData, setFormData] = useState({
     client_email: "",
@@ -65,7 +70,7 @@ useEffect(() => {
         if (Array.isArray(data.msg)) {
           // API returned array inside `msg`
           setServices(
-            data.msg.map((s: any) => ({
+            data.msg.map((s: ApiService) => ({
               id: s.service_id,
               name: s.service_name,
             }))
