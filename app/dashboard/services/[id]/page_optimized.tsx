@@ -55,7 +55,6 @@ const ServiceDetailPage = () => {
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
   const [addActionLoading, setAddActionLoading] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
-  const [availableRoles, setAvailableRoles] = useState<string[]>([]);
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
 
   // Confirmation popups (remove/confirm role/staff)
@@ -75,10 +74,8 @@ const ServiceDetailPage = () => {
   const [editError, setEditError] = useState<string | null>(null);
   const [editLoading, setEditLoading] = useState(false);
 
-  // 🚀 PERFORMANCE OPTIMIZATIONS
-  
   // Memoized available roles to prevent re-creation
-  const availableRolesList = useMemo(() => ["admin", "content", "booking"], []);
+  const availableRoles = useMemo(() => ["admin", "content", "booking"], []);
 
   // Memoized current service staff IDs
   const currentServiceStaffIds = useMemo(() => 
@@ -123,7 +120,7 @@ const ServiceDetailPage = () => {
     refreshService();
   }, [id, refreshService]);
 
-  // 🚀 OPTIMIZED MEMBER FETCHING - Only fetch when needed
+  // Optimized member fetching - Only fetch when needed
   const fetchAvailableMembers = useCallback(async () => {
     if (!service?.createdBy) return;
     
@@ -141,13 +138,11 @@ const ServiceDetailPage = () => {
         }));
       
       setAvailableMembers(selectable);
-      setAvailableRoles(availableRolesList);
     } catch (e) {
       console.error("Failed to fetch available members", e);
       setAvailableMembers([]);
-      setAvailableRoles([]);
     }
-  }, [service?.createdBy, currentServiceStaffIds, availableRolesList]);
+  }, [service?.createdBy, currentServiceStaffIds]);
 
   // Only fetch members when modals are opened
   useEffect(() => {
@@ -156,7 +151,7 @@ const ServiceDetailPage = () => {
     }
   }, [showAddStaff, showEditService, fetchAvailableMembers]);
 
-  // 🚀 OPTIMIZED MEMBER MANAGEMENT FUNCTIONS with useCallback
+  // Optimized member management functions with useCallback
   const handleAddNewMember = useCallback(() => {
     if (availableMembers.length === 0) return;
     const firstAvailableMember = availableMembers.find(m => 
@@ -317,7 +312,7 @@ const ServiceDetailPage = () => {
     setAddActionLoading(false);
   };
 
-  // Edit service
+  // Optimized edit service function
   const handleEditService = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -397,16 +392,6 @@ const ServiceDetailPage = () => {
       }
     }
     setEditLoading(false);
-  };
-
-  const handleDeleteService = async (id: string) => {
-    if (!currentUser || !currentUser.username) return;
-    try {
-      await ServicesAPI.deleteUnit({ service_id: id, username: currentUser.username });
-      router.push("/dashboard/services");
-    } catch (err) {
-      alert("Failed to delete service.");
-    }
   };
 
   if (loading) {
@@ -740,254 +725,282 @@ const ServiceDetailPage = () => {
         </div>
       </div>
 
-      {/* 🚀 OPTIMIZED Edit Service Modal */}
-     {showEditService && (
-  <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" onClick={() => setShowEditService(false)}>
-    <div 
-      className="bg-white dark:bg-gray-900 shadow-xl rounded-xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col border border-gray-200 dark:border-gray-800"
-      onClick={e => e.stopPropagation()}
-    >
-      {/* Header */}
-      <div className="px-6 py-5 border-b border-gray-100 dark:border-gray-800">
-        <h2 className="font-bold text-xl text-gray-900 dark:text-white">Edit Service</h2>
-      </div>
-      
-      {/* Scrollable Content */}
-      <div className="flex-1 overflow-y-auto px-6 py-5">
-        {editError && (
-          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg px-4 py-3 text-red-700 dark:text-red-300 text-sm mb-5">
-            {editError}
-          </div>
-        )}
-        <form onSubmit={handleEditService} className="space-y-6" id="edit-service-form">
-          {/* Basic Info */}
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-800 dark:text-gray-200 mb-2">Name</label>
-              <input 
-                type="text" 
-                value={editName} 
-                onChange={e => setEditName(e.target.value)} 
-                className="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2.5 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent" 
-                required 
-              />
+      {/* Optimized Edit Service Modal */}
+      {showEditService && (
+        <div
+          className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4"
+          onClick={() => setShowEditService(false)}
+        >
+          <div
+            className="bg-white dark:bg-gray-900 shadow-2xl rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col border border-gray-200 dark:border-gray-700"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-blue-50 to-white dark:from-gray-800 dark:to-gray-900">
+              <h2 className="font-extrabold text-xl text-gray-900 dark:text-white">
+                Edit Service
+              </h2>
             </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-800 dark:text-gray-200 mb-2">Description</label>
-              <textarea 
-                value={editDescription} 
-                onChange={e => setEditDescription(e.target.value)} 
-                className="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2.5 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent" 
-                rows={3} 
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-800 dark:text-gray-200 mb-2">Status</label>
-              <select 
-                value={editStatus} 
-                onChange={e => setEditStatus(e.target.value)} 
-                className="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2.5 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent"
-              >
-                <option value="active">Active</option>
-                <option value="suspended">Suspended</option>
-              </select>
-            </div>
-          </div>
 
-          {/* Availability Editor */}
-          <div className="pt-6">
-            <label className="block text-sm font-medium text-gray-800 dark:text-gray-200 mb-4">Availability</label>
-            <div className="space-y-3">
-              {Object.entries(editAvailability).map(([day, times]) => (
-                <div key={day} className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-                  <span className="w-20 capitalize text-sm font-medium text-gray-800 dark:text-gray-200">{day}</span>
-                  <input 
-                    type="time" 
-                    value={times.start} 
-                    onChange={(e) => setEditAvailability({ ...editAvailability, [day]: { ...times, start: e.target.value } })} 
-                    className="border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-1 focus:ring-black dark:focus:ring-white" 
-                  />
-                  <span className="text-gray-500 dark:text-gray-400">-</span>
-                  <input 
-                    type="time" 
-                    value={times.end} 
-                    onChange={(e) => setEditAvailability({ ...editAvailability, [day]: { ...times, end: e.target.value } })} 
-                    className="border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-1 focus:ring-black dark:focus:ring-white" 
-                  />
-                  <Button 
-                    type="button" 
-                    variant="ghost" 
-                    size="sm"
-                    className="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white p-1.5"
-                    onClick={() => {
-                      const copy = { ...editAvailability };
-                      delete copy[day];
-                      setEditAvailability(copy);
-                    }}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+            {/* Scrollable Content */}
+            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6">
+              {editError && <div className="text-red-500 text-sm">{editError}</div>}
+              <form onSubmit={handleEditService} className="space-y-6" id="edit-service-form">
+                {/* Basic Info */}
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Name
+                    </label>
+                    <input
+                      type="text"
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                      className="w-full border border-gray-300 dark:border-gray-600 rounded-xl px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-300 transition"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Description
+                    </label>
+                    <textarea
+                      value={editDescription}
+                      onChange={(e) => setEditDescription(e.target.value)}
+                      className="w-full border border-gray-300 dark:border-gray-600 rounded-xl px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-300 transition resize-none"
+                      rows={3}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Status
+                    </label>
+                    <select
+                      value={editStatus}
+                      onChange={(e) => setEditStatus(e.target.value)}
+                      className="w-full border border-gray-300 dark:border-gray-600 rounded-xl px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-300 transition"
+                    >
+                      <option value="active">Active</option>
+                      <option value="suspended">Suspended</option>
+                    </select>
+                  </div>
                 </div>
-              ))}
-              
-              <div className="flex items-center gap-2 mt-4">
-                <select 
-                  className="border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-1 focus:ring-black dark:focus:ring-white" 
-                  defaultValue="" 
-                  onChange={(e) => {
-                    const newDay = e.target.value;
-                    if (newDay && !editAvailability[newDay]) {
-                      setEditAvailability({ ...editAvailability, [newDay]: { start: "09:00", end: "17:00" } });
-                    }
-                    e.target.value = "";
-                  }}
-                >
-                  <option value="">+ Add Day</option>
-                  {["monday","tuesday","wednesday","thursday","friday","saturday","sunday"]
-                    .filter(d => !Object.keys(editAvailability).includes(d))
-                    .map(d => <option key={d} value={d}>{d.charAt(0).toUpperCase() + d.slice(1)}</option>)}
-                </select>
-              </div>
-            </div>
-          </div>
 
-          {/* Existing Members */}
-          <div className="pt-6">
-            <label className="block text-sm font-medium text-gray-800 dark:text-gray-200 mb-4">Existing Members</label>   
-            {service.members && service.members.length > 0 ? (
-              <div className="space-y-4">
-                {service.members.map(member => (
-                  <div key={member.memberId} className="border border-gray-200 dark:border-gray-700 rounded-xl p-4 bg-gray-50 dark:bg-gray-800/50">
-                    <div className="font-semibold text-gray-900 dark:text-white mb-3">{member.memberName}</div>
-                    <div className="flex flex-wrap gap-2">
-                      {availableRoles.map(role => (
-                        <label key={role} className="inline-flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition-colors">
-                          <input 
-                            type="checkbox" 
-                            className="rounded text-black focus:ring-black dark:text-white dark:focus:ring-white"
-                            checked={(editedMembers[member.memberId] || member.roles).includes(role)}
-                            onChange={e => handleExistingMemberRoleChange(
-                              member.memberId, 
-                              role, 
-                              e.target.checked
-                            )}
-                          />
-                          <span className="text-sm text-gray-800 dark:text-gray-200">{role}</span>
-                        </label>
-                      ))}
+                {/* Availability Editor */}
+                <div className="border-t border-gray-200 dark:border-gray-700 pt-4 space-y-3">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Availability
+                  </label>
+                  <div className="space-y-2">
+                    {Object.entries(editAvailability).map(([day, times]) => (
+                      <div
+                        key={day}
+                        className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-800 rounded-xl shadow-sm"
+                      >
+                        <span className="w-20 capitalize text-sm font-medium text-gray-700 dark:text-gray-200">
+                          {day}
+                        </span>
+                        <input
+                          type="time"
+                          value={times.start}
+                          onChange={(e) =>
+                            setEditAvailability({
+                              ...editAvailability,
+                              [day]: { ...times, start: e.target.value },
+                            })
+                          }
+                          className="border border-gray-300 dark:border-gray-600 rounded-xl px-2 py-1 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-300 transition"
+                        />
+                        <span className="text-gray-500 dark:text-gray-400">-</span>
+                        <input
+                          type="time"
+                          value={times.end}
+                          onChange={(e) =>
+                            setEditAvailability({
+                              ...editAvailability,
+                              [day]: { ...times, end: e.target.value },
+                            })
+                          }
+                          className="border border-gray-300 dark:border-gray-600 rounded-xl px-2 py-1 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-300 transition"
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300"
+                          onClick={() => {
+                            const copy = { ...editAvailability };
+                            delete copy[day];
+                            setEditAvailability(copy);
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+
+                    <div className="flex items-center gap-2 mt-2">
+                      <select
+                        className="border border-gray-300 dark:border-gray-600 rounded-xl px-3 py-1 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-300 transition"
+                        defaultValue=""
+                        onChange={(e) => {
+                          const newDay = e.target.value;
+                          if (newDay && !editAvailability[newDay]) {
+                            setEditAvailability({
+                              ...editAvailability,
+                              [newDay]: { start: "09:00", end: "17:00" },
+                            });
+                          }
+                          e.target.value = "";
+                        }}
+                      >
+                        <option value="">+ Add Day</option>
+                        {["monday","tuesday","wednesday","thursday","friday","saturday","sunday"]
+                          .filter(d => !Object.keys(editAvailability).includes(d))
+                          .map(d => (
+                            <option key={d} value={d}>{d.charAt(0).toUpperCase() + d.slice(1)}</option>
+                          ))}
+                      </select>
                     </div>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-gray-500 dark:text-gray-400 italic text-sm">No members assigned</p>
-            )}   
-          </div>
+                </div>
 
-          {/* Add New Members */}
-          <div className="pt-6">
-            <div className="flex justify-between items-center mb-4">
-              <label className="block text-sm font-medium text-gray-800 dark:text-gray-200">
-                Add New Members
-              </label>
-              <Button 
-                type="button" 
-                variant="outline" 
-                size="sm"
-                className="bg-black hover:bg-gray-800 text-white dark:bg-white dark:hover:bg-gray-100 dark:text-black border-black dark:border-white rounded-lg"
-                onClick={handleAddNewMember}
-                disabled={availableMembers.length === 0}
+                {/* Members Section */}
+                <div className="border-t border-gray-200 dark:border-gray-700 pt-4 space-y-3">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Existing Members
+                  </label>
+                  {service.members && service.members.length > 0 ? (
+                    <div className="space-y-3">
+                      {service.members.map((member) => (
+                        <div
+                          key={member.memberId}
+                          className="p-3 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm"
+                        >
+                          <div className="font-semibold text-gray-800 dark:text-gray-100 mb-2">
+                            {member.memberName}
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            {availableRoles.map((role) => (
+                              <label
+                                key={role}
+                                className="flex items-center gap-1 px-3 py-1 rounded-xl border border-gray-300 dark:border-gray-600 cursor-pointer bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition"
+                              >
+                                <input
+                                  type="checkbox"
+                                  className="rounded text-black focus:ring-black dark:text-white dark:focus:ring-white"
+                                  checked={(editedMembers[member.memberId] || member.roles).includes(role)}
+                                  onChange={(e) => handleExistingMemberRoleChange(member.memberId, role, e.target.checked)}
+                                />
+                                <span className="text-sm text-gray-800 dark:text-gray-100">{role}</span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gray-500 dark:text-gray-400 italic text-sm">No members assigned</p>
+                  )}
+                </div>
+
+                {/* Add New Members */}
+                <div className="border-t border-gray-200 dark:border-gray-700 pt-4 space-y-3">
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Add New Members
+                    </label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-1 text-blue-600 border-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-400 dark:hover:bg-blue-800"
+                      onClick={handleAddNewMember}
+                      disabled={availableMembers.length === 0}
+                    >
+                      <Plus className="h-4 w-4" /> Add
+                    </Button>
+                  </div>
+
+                  {newMembers.length > 0 ? (
+                    <div className="space-y-3">
+                      {newMembers.map((newMember, index) => (
+                        <div
+                          key={index}
+                          className="p-3 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm"
+                        >
+                          <div className="flex justify-between items-center mb-2">
+                            <select
+                              value={newMember.id}
+                              onChange={(e) => handleNewMemberSelect(index, e.target.value)}
+                              className="border border-gray-300 dark:border-gray-600 rounded-xl px-2 py-1 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-300 transition"
+                            >
+                              {availableMembers.map((member) => (
+                                <option key={member.id} value={member.id}>{member.name}</option>
+                              ))}
+                            </select>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="text-red-500 hover:text-red-600"
+                              onClick={() => handleRemoveNewMember(index)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+
+                          <div className="flex flex-wrap gap-2">
+                            {availableRoles.map((role) => (
+                              <label
+                                key={role}
+                                className="flex items-center gap-1 px-3 py-1 rounded-xl border border-gray-300 dark:border-gray-600 cursor-pointer bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition"
+                              >
+                                <input
+                                  type="checkbox"
+                                  className="rounded text-black focus:ring-black dark:text-white dark:focus:ring-white"
+                                  checked={newMember.roles.includes(role)}
+                                  onChange={(e) => handleNewMemberRoleChange(index, role, e.target.checked)}
+                                />
+                                <span className="text-sm text-gray-800 dark:text-gray-100">{role}</span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gray-500 dark:text-gray-400 italic text-sm">No new members added</p>
+                  )}
+                </div>
+              </form>
+            </div>
+
+            {/* Footer with Actions */}
+            <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowEditService(false)}
+                className="border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
               >
-                <Plus className="h-4 w-4 mr-1.5" />
-                Add Member
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                form="edit-service-form"
+                variant="default"
+                className="bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-500 dark:hover:bg-blue-600 dark:text-gray-900 rounded-xl px-4 py-2 font-semibold"
+                disabled={editLoading}
+              >
+                {editLoading ? "Saving..." : "Save Changes"}
               </Button>
             </div>
-            
-            {newMembers.length > 0 ? (
-              <div className="space-y-4">
-                {newMembers.map((newMember, index) => (
-                  <div key={index} className="border border-gray-200 dark:border-gray-700 rounded-xl p-4 bg-gray-50 dark:bg-gray-800/50">
-                    <div className="flex justify-between items-center mb-3">
-                      <select 
-                        value={newMember.id}
-                        onChange={e => handleNewMemberSelect(index, e.target.value)}
-                        className="border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-1 focus:ring-black dark:focus:ring-white"
-                      >
-                        {availableMembers.map(member => (
-                         /*  <option key={member.id} value={member.id}>
-                            {member.name}
-                          </option> */
-
-                          <option value="" key={member.id} >
-                            {member.name}
-                          </option>
-                        ))}
-                      </select>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white p-1.5"
-                        onClick={() => handleRemoveNewMember(index)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    
-                    <div className="flex flex-wrap gap-2">
-                      {availableRoles.map(role => (
-                        <label key={role} className="inline-flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition-colors">
-                          <input 
-                            type="checkbox"
-                            className="rounded text-black focus:ring-black dark:text-white dark:focus:ring-white"
-                            checked={newMember.roles.includes(role)}
-                            onChange={e => handleNewMemberRoleChange(
-                              index,
-                              role,
-                              e.target.checked
-                            )}
-                          />
-                          <span className="text-sm text-gray-800 dark:text-gray-200">{role}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-gray-500 dark:text-gray-400 italic text-sm">No new members added</p>
-            )}
           </div>
-        </form>
-      </div>
-
-      {/* Footer with Actions */}
-      <div className="px-6 py-5 border-t border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/30">
-        <div className="flex gap-3 justify-end">
-          <Button 
-            type="button" 
-            variant="outline" 
-            onClick={() => setShowEditService(false)}
-            className="border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
-          >
-            Cancel
-          </Button>
-          <Button 
-            type="submit" 
-            form="edit-service-form" 
-            variant="default"
-            className="bg-black hover:bg-gray-800 text-white dark:bg-white dark:hover:bg-gray-100 dark:text-black rounded-lg"
-            disabled={editLoading}
-          >
-            {editLoading ? "Saving..." : "Save Changes"}
-          </Button>
         </div>
-      </div>
-    </div>
-  </div>
-)}
+      )}
     </div>
   );
 };
