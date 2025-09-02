@@ -1,3 +1,6 @@
+      import { Button } from "@/components/ui/button";
+import { Trash2, Users, Plus } from "lucide-react";
+
       {/* 🎨 MODERN Edit Service Modal */}
       {showEditService && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setShowEditService(false)}>
@@ -267,7 +270,7 @@
                     </div>
                   ) : (
                     <div className="text-center py-6 text-gray-500">
-                      <p className="text-sm">Click "Add Member" to assign new team members</p>
+                      <p className="text-sm">Click &quot;Add Member&quot; to assign new team members</p>
                     </div>
                   )}
                 </div>
