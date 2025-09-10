@@ -118,7 +118,7 @@ const ContentService = () => {
                     <h1 className="font-semibold text-xl md:text-2xl lg:text-3xl">{store.name}</h1>
                     <span className={` ${store.status === 'active' ? 'text-green-600' : 'text-gray-600'} font-medium`}>{store.status}</span>
                   </div>
-                  <div className="py-2 font-medium text-base md:text-lg text-gray-700">
+                  <div className="py-2 font-sx text-[16px] text-base ">
                     {store.description}
                   </div>
                   <div className="flex justify-between items-center mt-auto">
@@ -176,9 +176,7 @@ const ContentService = () => {
           })}
         </div>
       </div>
-      <div className='flex justify-center items-center my-10'>
-      <button className='bg-[#d4731e] text-white mt-15 p-3 font-medium rounded-md'>Browse All Properties</button>
-      </div>
+
     </div>
   );
 };
