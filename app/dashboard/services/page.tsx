@@ -50,12 +50,10 @@ import {
 
 // Staff roles
 const STAFF_ROLES = [
-  { value: "bookings", label: "Bookings" },
+  { value: "booking", label: "Bookings" },
   { value: "admin", label: "Admin" },
-  { value: "content-creator", label: "Content Creator" },
-  { value: "customer-service", label: "Customer Service" },
-  { value: "technical-support", label: "Technical Support" },
-  { value: "manager", label: "Manager" },
+  { value: "content", label: "Content Creator" },
+
 ] as const;
 
 // Days of week

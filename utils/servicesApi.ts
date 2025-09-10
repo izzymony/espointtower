@@ -364,6 +364,8 @@ export const ServicesAPI = {
   getContent: (contentId: string) =>
     apiRequest<ApiResponse>(`get_content/${contentId}`),
 
+  updateServiceContent: (contentId: string, payload: Partial<CreateServiceContentPayload>) => apiRequest<ApiResponse>(`update_content/${contentId}`, "POST", payload),
+
   getAllContentByService: async (serviceUnit: string) => {
     const raw = await apiRequest<ApiResponse>(`get_all_content_based_service/${serviceUnit}`);
     return safeArray<any>(raw);

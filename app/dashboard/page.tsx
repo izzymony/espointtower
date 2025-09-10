@@ -24,9 +24,15 @@ export default function DashboardPage() {
     const membersData = localStorage.getItem("members")
     if (membersData) {
       try {
-        const parsed: Member[] = JSON.parse(membersData)
-        setMembers(parsed)
+        const parsed = JSON.parse(membersData)
+        if (Array.isArray(parsed)) {
+          setMembers(parsed)
+        } else {
+          setMembers([])
+          console.error("Members data is not an array.")
+        }
       } catch {
+        setMembers([])
         console.error("Invalid members data in localStorage")
       }
     }

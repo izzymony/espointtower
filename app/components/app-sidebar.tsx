@@ -1,6 +1,6 @@
 "use client"
 
-import { Home, Settings, Users, LogOut, Briefcase,Upload,Book } from "lucide-react"
+import { Home, Settings, Users, LogOut, Briefcase,Upload,Book, UploadIcon } from "lucide-react"
 import {
   Sidebar,
   SidebarContent,
@@ -44,7 +44,13 @@ const menuItems = [
     title:"Bookings",
     url: "/dashboard/Bookings",
     icon:Book,
-  }
+  },
+
+  {
+    title:"Uploads",
+    url: "/dashboard/Uploads",
+    icon:UploadIcon,
+  },
 ]
 
 export function AppSidebar() {
