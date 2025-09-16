@@ -7,10 +7,11 @@ import Loader from "../components/Loading"
 import ServicesCount from "../components/ServicesCount"
 import Amount from "../components/Amount"
 import DynamicCount from "../components/DynamicCount"
+import BookingCounts from "../components/BookingCounts"
+
 // 🔹 Types
 interface ServiceRecord {
   approved: number
-  // extend with suspended, pending etc. if backend adds them
 }
 
 interface ServiceDetails {
@@ -55,8 +56,6 @@ export default function DashboardPage() {
         return res.json()
       })
       .then((data: ApiResponse) => {
-        console.log("API response:", data)
-
         if (data.msg && typeof data.msg === "object") {
           const arr: MembersCount[] = Object.entries(data.msg).map(
             ([service_id, details]) => ({
@@ -94,8 +93,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats Grid */}
-      <div>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4  md:grid-cols-3 ">
         {membersCount.map((service) => (
           <Card key={service.service_id}>
             <CardHeader>
@@ -111,12 +109,13 @@ export default function DashboardPage() {
           </Card>
         ))}
 
-        <ServicesCount/>
-        <Amount/>
-        <DynamicCount/>
-      </div>
-      
-      </div>
+     
+        {/* Extra stat cards */}
+        <ServicesCount />
+        <Amount />
+        <DynamicCount />
+        </div>
+     
     </div>
   )
 }

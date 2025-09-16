@@ -41,7 +41,7 @@ const DynamicCount = () => {
 
       const username = storedUser.username;
       const serviceUnit = "none";
-      const today = '2025-09-12'; /* formatDate(new Date()) */
+      const today = formatDate(new Date()) ; /* */
 
       const url = `https://espoint.onrender.com/espoint/get_all_in_one_booking_count_dynamic/${username}/${serviceUnit}/${mode}/${today}`;
       console.log("Fetching:", url);

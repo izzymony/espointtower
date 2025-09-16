@@ -83,7 +83,7 @@ const BookingCounts = () => {
   return (
     <div className="space-y-6">
       {/* Controls */}
-      <div className="flex flex-wrap gap-4 items-center">
+      <div className="">
         <select
           value={mode}
           onChange={(e) => setMode(e.target.value as Mode)}
@@ -125,23 +125,25 @@ const BookingCounts = () => {
       ) : error ? (
         <p className="text-red-500">{error}</p>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="">
           {Object.entries(data).map(([serviceId, record]) => (
-            <Card key={serviceId}>
+            <Card key={serviceId} className="shadow-md rounded-2xl">
               <CardHeader>
-                <CardTitle>Service: {serviceId}</CardTitle>
+                <CardTitle className="text-lg font-semibold text-gray-800">
+                  Service: {serviceId}
+                </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-2">
                 {Object.entries(record).map(([status, count]) => (
-                  <p
+                  <div
                     key={status}
-                    className="text-sm text-gray-700 flex justify-between"
+                    className=""
                   >
-                    <span className="capitalize">{status}</span>
+                    <span className="capitalize text-gray-600">{status}</span>
                     <span className="font-semibold text-[#d4731e]">
                       {count}
                     </span>
-                  </p>
+                  </div>
                 ))}
               </CardContent>
             </Card>

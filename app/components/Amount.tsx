@@ -163,7 +163,7 @@ const BookingAmounts = () => {
       {loading && <p>Loading...</p>}
       {!loading && Object.keys(data).length === 0 && <p>No records found</p>}
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3">
         {Object.entries(data).map(([serviceId, record]) => (
           <Card key={serviceId}>
             <CardHeader>
