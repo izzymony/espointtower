@@ -2,121 +2,121 @@
 
 import { useEffect, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Users, UserPlus, Settings, Activity, ShieldCheck, ShieldX, Clock } from "lucide-react"
+import { Users } from "lucide-react"
+import Loader from "../components/Loading"
+import ServicesCount from "../components/ServicesCount"
+import Amount from "../components/Amount"
+import DynamicCount from "../components/DynamicCount"
+// 🔹 Types
+interface ServiceRecord {
+  approved: number
+  // extend with suspended, pending etc. if backend adds them
+}
 
-// Strict Member type
-type Member = {
-  username: string
-  status: "active" | "pending" | "suspended" | "approved"
-  position: "admin" | "regular"
+interface ServiceDetails {
+  service_name: string
+  records: ServiceRecord
+}
+
+interface ApiResponse {
+  msg: {
+    [service_id: string]: ServiceDetails
+  }
+}
+
+interface MembersCount {
+  service_id: string
+  service_name: string
+  records: ServiceRecord
 }
 
 export default function DashboardPage() {
   const [user, setUser] = useState<{ username: string } | null>(null)
-  const [members, setMembers] = useState<Member[]>([])
+  const [membersCount, setMembersCounts] = useState<MembersCount[]>([])
+  const [error, setError] = useState("")
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    const userData = localStorage.getItem("user")
-    if (userData) {
-      setUser(JSON.parse(userData))
-    }
+    const storedUser = JSON.parse(localStorage.getItem("user") || "{}")
 
-    const membersData = localStorage.getItem("members")
-    if (membersData) {
-      try {
-        const parsed = JSON.parse(membersData)
-        if (Array.isArray(parsed)) {
-          setMembers(parsed)
-        } else {
-          setMembers([])
-          console.error("Members data is not an array.")
-        }
-      } catch {
-        setMembers([])
-        console.error("Invalid members data in localStorage")
-      }
+    if (!storedUser?.username) {
+      setError("No user found in localStorage")
+      return
     }
+    setUser(storedUser)
+
+    const username = storedUser.username
+    const url = `https://espoint.onrender.com/espoint/get_all_service_members_counts/${username}`
+
+    setLoading(true)
+    fetch(url)
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch service members count")
+        return res.json()
+      })
+      .then((data: ApiResponse) => {
+        console.log("API response:", data)
+
+        if (data.msg && typeof data.msg === "object") {
+          const arr: MembersCount[] = Object.entries(data.msg).map(
+            ([service_id, details]) => ({
+              service_id,
+              service_name: details.service_name,
+              records: details.records,
+            })
+          )
+          setMembersCounts(arr)
+        } else {
+          setMembersCounts([])
+        }
+      })
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false))
   }, [])
 
-  const stats = [
-    {
-      title: "Total Members",
-      value: members.length,
-      icon: Users,
-      description: "All members in the system",
-    },
-    {
-      title: "Active Members",
-      value: members.filter((m) => m.status === "active").length,
-      icon: Activity,
-      description: "Currently active members",
-    },
-    {
-      title: "Approved Members",
-      value: members.filter((m) => m.status === "approved").length,
-      icon: ShieldCheck,
-      description: "Members approved by admin",
-    },
-    {
-      title: "Suspended Members",
-      value: members.filter((m) => m.status === "suspended").length,
-      icon: ShieldX,
-      description: "Members who are suspended",
-    },
-    {
-      title: "Pending Members",
-      value: members.filter((m) => m.status === "pending").length,
-      icon: Clock,
-      description: "Awaiting admin approval",
-    },
-    {
-      title: "Admins",
-      value: members.filter((m) => m.position === "admin").length,
-      icon: Settings,
-      description: "System administrators",
-    },
-  ]
+  if (loading)
+    return (
+      <div className="mt-20 flex h-[100vh] justify-center items-center">
+        <Loader />
+      </div>
+    )
+
+  if (error) return <div className="text-red-500 mt-20">{error}</div>
+  if (!membersCount.length) return <div className="mt-20">No content found.</div>
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold">Dashboard</h1>
         <p className="text-muted-foreground">
-          Welcome back, {user?.username}! Here&apos;s an overview of your member management system.
+          Welcome back, {user?.username}! Here&apos;s an overview of your services and members.
         </p>
       </div>
 
       {/* Stats Grid */}
+      <div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {stats.map((stat) => (
-          <Card key={stat.title}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-              <stat.icon className="h-5 w-5 text-muted-foreground" />
+        {membersCount.map((service) => (
+          <Card key={service.service_id}>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                {service.service_name}
+                <Users className="h-5 w-5 text-muted-foreground" />
+              </CardTitle>
+              <CardDescription>Approved Members</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stat.value}</div>
-              <p className="text-xs text-muted-foreground">{stat.description}</p>
+              <p className="text-2xl font-bold">{service.records.approved}</p>
             </CardContent>
           </Card>
         ))}
-      </div>
 
-      {/* Quick Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Settings className="h-5 w-5" />
-            Quick Actions
-          </CardTitle>
-          <CardDescription>Manage your members and system settings</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="text-sm text-muted-foreground">
-            Use the sidebar to navigate to Settings where you can add, update, and manage member passcodes.
-          </div>
-        </CardContent>
-      </Card>
+        <ServicesCount/>
+        <Amount/>
+        <DynamicCount/>
+      </div>
+      
+      </div>
     </div>
   )
 }

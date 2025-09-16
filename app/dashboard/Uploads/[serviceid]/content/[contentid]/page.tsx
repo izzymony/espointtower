@@ -109,7 +109,7 @@ const ContentDetails = () => {
           setContent(data.msg);
         }
       })
-      .catch((err) => setError(err.message))
+     .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
   }, [content_id]);
 
@@ -123,7 +123,7 @@ setFormData((prev) => ({...prev, [name]: value}))
   e.preventDefault();
   setBookingLoading(true);
   setBookingSuccess('');
-  setBookingError('');
+  setBookingError(''); 
   try {
     const payload = {
       service_id: content?.service || '',

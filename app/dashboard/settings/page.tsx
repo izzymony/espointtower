@@ -194,7 +194,7 @@ export default function SettingsPage() {
           <p className="text-muted-foreground">Manage members and configure system settings.</p>
         </div>
 
-        { (
+        { role === "admin" && (
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
               <Button>

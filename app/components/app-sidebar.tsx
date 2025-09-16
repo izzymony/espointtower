@@ -39,13 +39,7 @@ const menuItems = [
     url:"/dashboard/upload_services",
     icon: Upload,
   },
-
-  {
-    title:"Bookings",
-    url: "/dashboard/Bookings",
-    icon:Book,
-  },
-
+ 
   {
     title:"Uploads",
     url: "/dashboard/Uploads",
@@ -67,7 +61,7 @@ export function AppSidebar() {
   }
 
   return (
-    <Sidebar>
+    <Sidebar className="h-screen">
       <SidebarHeader>
         <div className="flex items-center gap-2 px-2 py-2">
           <Users className="h-6 w-6" />
