@@ -35,7 +35,7 @@ const ContentService = () => {
   useEffect(() => {
     if (!service_id) return;
 
-    const url = `https://espoint.onrender.com/espoint/get_all_content_based_service_and_status/${service_id}/active`;
+    const url = `https://espoint.onrender.com/espoint/get_all_content_based_service_and_status/${service_id}/approved`;
     console.log("Fetching URL:", url);
 
     setLoading(true);
@@ -109,7 +109,7 @@ const ContentService = () => {
                       className="p-2 bg-white/90 hover:bg-white rounded-full transition-colors shadow-lg"
                       onClick={(e) => e.preventDefault()}
                     >
-                      <Heart className="w-6 h-6 text-muted-foreground hover:text-red-500 transition-colors" />
+                     
                     </button>
                   </div>
                 </div>
@@ -118,9 +118,13 @@ const ContentService = () => {
                     <h1 className="font-semibold text-xl md:text-2xl lg:text-3xl">{store.name}</h1>
                     <span className={` ${store.status === 'active' ? 'text-green-600' : 'text-gray-600'} font-medium`}>{store.status}</span>
                   </div>
-                  <div className="py-2 font-medium text-base md:text-lg text-gray-700">
-                    {store.description}
-                  </div>
+                  
+<div className="py-2 font-sx text-[16px] text-base ">
+  {store.description.length > 120
+    ? store.description.slice(0, 120) + '...'
+    : store.description}
+</div>
+
                   <div className="flex justify-between items-center mt-auto">
                     <span className="font-bold text-black text-lg md:text-xl lg:text-2xl">&#8358; {store.base_price}</span>
                     <button
@@ -176,9 +180,7 @@ const ContentService = () => {
           })}
         </div>
       </div>
-      <div className='flex justify-center items-center my-10'>
-      <button className='bg-[#d4731e] text-white mt-15 p-3 font-medium rounded-md'>Browse All Properties</button>
-      </div>
+
     </div>
   );
 };
