@@ -105,12 +105,7 @@ const ContentService = () => {
                     <div className="text-center py-1 px-4 rounded-full bg-primary text-primary-foreground capitalize shadow-lg">
                       {store.category}
                     </div>
-                    <button
-                      className="p-2 bg-white/90 hover:bg-white rounded-full transition-colors shadow-lg"
-                      onClick={(e) => e.preventDefault()}
-                    >
-                     
-                    </button>
+
                   </div>
                 </div>
                 <div className="px-6 py-6 flex flex-col gap-4 flex-1">
@@ -129,7 +124,7 @@ const ContentService = () => {
                     <span className="font-bold text-black text-lg md:text-xl lg:text-2xl">&#8358; {store.base_price}</span>
                     <button
                       onClick={() => router.push(`/dashboard/Uploads/${service_id}/content/${content.content_id}`)}
-                      className="bg-black text-white hover:bg-[#b85c0f] py-2 px-5 rounded-lg transition-colors duration-300 font-semibold shadow-md"
+                      className="bg-black text-white py-2 px-5 rounded-lg transition-colors duration-300 font-semibold shadow-md"
                     >
                       Book Now
                     </button>

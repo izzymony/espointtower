@@ -9,7 +9,6 @@ import Amount from "../components/Amount"
 import DynamicCount from "../components/DynamicCount"
 import BookingCounts from "../components/BookingCounts"
 
-// 🔹 Types
 interface ServiceRecord {
   approved: number
 }
@@ -32,10 +31,11 @@ interface MembersCount {
 }
 
 export default function DashboardPage() {
-  const [user, setUser] = useState<{ username: string } | null>(null)
+  const [user, setUser] = useState<{ username: string; role?: string } | null>(null)
   const [membersCount, setMembersCounts] = useState<MembersCount[]>([])
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
 
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem("user") || "{}")
@@ -44,33 +44,45 @@ export default function DashboardPage() {
       setError("No user found in localStorage")
       return
     }
+
     setUser(storedUser)
+    setIsAdmin(storedUser?.role === "admin")
 
-    const username = storedUser.username
-    const url = `https://espoint.onrender.com/espoint/get_all_service_members_counts/${username}`
+    // ✅ Only fetch real data if admin
+    if (storedUser?.role === "admin") {
+      const username = storedUser.username
+      const url = `https://espoint.onrender.com/espoint/get_all_service_members_counts/${username}`
 
-    setLoading(true)
-    fetch(url)
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch service members count")
-        return res.json()
-      })
-      .then((data: ApiResponse) => {
-        if (data.msg && typeof data.msg === "object") {
-          const arr: MembersCount[] = Object.entries(data.msg).map(
-            ([service_id, details]) => ({
-              service_id,
-              service_name: details.service_name,
-              records: details.records,
-            })
-          )
-          setMembersCounts(arr)
-        } else {
-          setMembersCounts([])
-        }
-      })
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false))
+      setLoading(true)
+      fetch(url)
+        .then((res) => {
+          if (!res.ok) throw new Error("Failed to fetch service members count")
+          return res.json()
+        })
+        .then((data: ApiResponse) => {
+          if (data.msg && typeof data.msg === "object") {
+            const arr: MembersCount[] = Object.entries(data.msg).map(
+              ([service_id, details]) => ({
+                service_id,
+                service_name: details.service_name,
+                records: details.records,
+              })
+            )
+            setMembersCounts(arr)
+          } else {
+            setMembersCounts([])
+          }
+        })
+        .catch((err) => setError(err.message))
+        .finally(() => setLoading(false))
+    } else {
+      // ❌ Not admin → show dummy boxes
+      setMembersCounts([
+        { service_id: "1", service_name: "Service A", records: { approved: 0 } },
+        { service_id: "2", service_name: "Service B", records: { approved: 0 } },
+        { service_id: "3", service_name: "Service C", records: { approved: 0 } },
+      ])
+    }
   }, [])
 
   if (loading)
@@ -81,19 +93,19 @@ export default function DashboardPage() {
     )
 
   if (error) return <div className="text-red-500 mt-20">{error}</div>
-  if (!membersCount.length) return <div className="mt-20">No content found.</div>
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold">Dashboard</h1>
         <p className="text-muted-foreground">
-          Welcome back, {user?.username}! Here&apos;s an overview of your services and members.
+          Welcome back, {user?.username}!{" "}
+          {isAdmin ? "Here’s an overview of your services and members." : "You have limited access."}
         </p>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 gap-4  md:grid-cols-3 ">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         {membersCount.map((service) => (
           <Card key={service.service_id}>
             <CardHeader>
@@ -104,18 +116,20 @@ export default function DashboardPage() {
               <CardDescription>Approved Members</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold">{service.records.approved}</p>
+              {/* If not admin, show "null" instead of number */}
+              <p className="text-2xl font-bold">
+                {isAdmin ? service.records.approved : "null"}
+              </p>
             </CardContent>
           </Card>
         ))}
 
-     
-        {/* Extra stat cards */}
+        {/* Extra stat cards (only show real values if admin, else nulls) */}
         <ServicesCount />
         <Amount />
         <DynamicCount />
-        </div>
-     
+       
+      </div>
     </div>
   )
 }

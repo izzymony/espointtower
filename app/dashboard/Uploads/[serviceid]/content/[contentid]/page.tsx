@@ -109,7 +109,7 @@ const ContentDetails = () => {
         {/* Rental Items */}
         <section>
           <h2 className="text-xl sm:text-2xl font-bold text-black">Rental Items</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4 text-gray-700 text-sm sm:text-base">
+          <div className="grid grid-cols-1 sm:grid-cols-1 gap-4 mt-4 text-gray-700 text-sm sm:text-base">
             <p>
               <span className="font-semibold">Item:</span>{' '}
               {store.rental_items[1].item}

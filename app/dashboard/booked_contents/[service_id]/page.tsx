@@ -51,9 +51,11 @@ const Booked = () => {
 
     fetch(url)
       .then((res) => {
-        if (!res.ok) throw new Error('Failed to fetch bookings')
+        if (!res.ok) throw new Error('Failed to fetch bookings or user not permitted')
+
+          else if(!res.ok) throw Error("Not permitted")
         return res.json()
-     
+        
       })
       .then((data) => {
         if (data.msg) {
@@ -70,7 +72,14 @@ const Booked = () => {
 
   return (
     <div className="bg-white">
+      <div className='py-5'>
+      <div onClick={() => router.back()} className="bg-black py-2 rounded-lg px-3 p-2 w-fit text-white">
+      Back to listings
+    </div>
+    </div>
       <div className=" mx-auto pb-16 ">
+
+
         <h1 className="text-5xl font-bold mb-10 drop-shadow-lg">Bookings</h1>
 
         {/* Filter Dropdown */}
@@ -84,6 +93,7 @@ const Booked = () => {
             <option value="paid">Paid</option>
             <option value="confirmed">Confirmed</option>
             <option value="completed">Completed</option>
+            <option value="rejected">Rejected</option>
           </select>
         </div>
 
@@ -111,7 +121,7 @@ const Booked = () => {
                     onClick={() =>
                       router.push(`/dashboard/booked_contents/${service_id}/bookings/${booking.booking_id}`)
                     }
-                    className="hover:bg-[#fffbed] cursor-pointer transition-all duration-200"
+                    className=" cursor-pointer transition-all duration-200"
                   >
                     <TableCell className="break-all font-mono py-6 px-6 text-sm">{booking.booking_id}</TableCell>
                     <TableCell className="font-semibold text-black py-6 px-6">{booking.service}</TableCell>
@@ -124,7 +134,12 @@ const Booked = () => {
                             ? 'bg-green-100 text-green-800'
                             : booking.status === 'paid'
                             ? 'bg-blue-100 text-blue-800'
-                            : 'bg-gray-200 text-gray-700'
+                            : booking.status === 'rejected'
+                            ? 'bg-red-700 text-white'
+                            :booking.status == 'completed'
+                            ?'bg-green-100 text-green-800'
+                            :'bg-gray-500 text-white'
+                            
                         }`}
                       >
                         {booking.status}

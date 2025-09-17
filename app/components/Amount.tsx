@@ -19,8 +19,8 @@ type AmountResponse = Record<string, AmountRecord>;
 // Helper: format date as YYYY-MM-DD
 const formatDate = (date: Date) => {
   const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0"); // 01-12
-  const day = String(date.getDate()).padStart(2, "0");       // 01-31
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
 };
 
@@ -31,26 +31,27 @@ const BookingAmounts = () => {
   const [data, setData] = useState<AmountResponse>({});
   const [error, setError] = useState("");
   const [mode, setMode] = useState<Mode>("week");
-  const [startDate, setStartDate] = useState(""); // YYYY-MM-DD
-  const [endDate, setEndDate] = useState("");     // YYYY-MM-DD
- const [loading, setLoading] = useState(false)
-  const [popup, setPopup] = useState("");
-  const [isAdmin , setIsAdmin] = useState(false);
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
-
- 
   const fetchAmounts = async () => {
-  
     try {
       setError("");
-      
 
       const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
       if (!storedUser?.username) {
         setError("No user found");
-       
         return;
       }
+
+      // ✅ Check admin role
+      if (storedUser?.role !== "admin") {
+        setIsAdmin(false);
+        return;
+      }
+      setIsAdmin(true);
 
       const username = storedUser.username;
       const serviceUnit = "none";
@@ -64,19 +65,16 @@ const BookingAmounts = () => {
       if (mode === "range") {
         if (!startDate || !endDate) {
           setError("Please select both start and end dates for range mode.");
-         
           return;
         }
 
         if (!isValidDate(startDate) || !isValidDate(endDate)) {
           setError("Invalid date format. Expected YYYY-MM-DD.");
-         
           return;
         }
 
         if (startDate > endDate) {
           setError("Start date must be the same or before end date.");
-          
           return;
         }
 
@@ -113,74 +111,95 @@ const BookingAmounts = () => {
   };
 
   useEffect(() => {
-    // auto-fetch only for non-range modes
-    if  (mode !== "range") fetchAmounts();
+    if (mode !== "range") fetchAmounts();
   }, [mode]);
 
   return (
     <div className="space-y-6">
       {/* Controls */}
-      
-      <div className="flex flex-wrap gap-4 items-center">
-        <select
-          value={mode}
-          onChange={(e) => setMode(e.target.value as Mode)}
-          className="border px-3 py-2 rounded"
-        >
-          <option value="week">Weekly</option>
-          <option value="month">Monthly</option>
-          <option value="year">Yearly</option>
-          <option value="day">Daily</option>
-          <option value="range">Custom Range</option>
-        </select>
+      {isAdmin && (
+        <div className="flex flex-wrap gap-4 items-center">
+          <select
+            value={mode}
+            onChange={(e) => setMode(e.target.value as Mode)}
+            className="border px-3 py-2 rounded"
+          >
+            <option value="week">Weekly</option>
+            <option value="month">Monthly</option>
+            <option value="year">Yearly</option>
+            <option value="day">Daily</option>
+            <option value="range">Custom Range</option>
+          </select>
 
-        {mode === "range" && (
-          <>
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="border px-3 py-2 rounded"
-            />
-            <input
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="border px-3 py-2 rounded"
-            />
-            <button
-              onClick={fetchAmounts}
-              disabled={!startDate || !endDate || loading}
-              className="bg-black disabled:bg-gray-400 text-white px-4 py-2 rounded hover:bg-[#b85f18] transition"
-            >
-              {loading ? "Fetching..." : "Fetch"}
-            </button>
-          </>
-        )}
-      </div>
+          {mode === "range" && (
+            <>
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="border px-3 py-2 rounded"
+              />
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="border px-3 py-2 rounded"
+              />
+              <button
+                onClick={fetchAmounts}
+                disabled={!startDate || !endDate || loading}
+                className="bg-black disabled:bg-gray-400 text-white px-4 py-2 rounded hover:bg-[#b85f18] transition"
+              >
+                {loading ? "Fetching..." : "Fetch"}
+              </button>
+            </>
+          )}
+        </div>
+      )}
 
       {/* Display Results */}
       {loading && <p>Loading...</p>}
-      {!loading && Object.keys(data).length === 0 && <p>No records found</p>}
+      {!loading && Object.keys(data).length === 0 && isAdmin && (
+        <p>No records found</p>
+      )}
 
       <div className="grid grid-cols-1 gap-3">
-        {Object.entries(data).map(([serviceId, record]) => (
-          <Card key={serviceId}>
-            <CardHeader>
-              <CardTitle>Service: {serviceId}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {Object.entries(record).map(([status, amount]) => (
-                <p
-                  key={status}
-                  className="text-lg font-semibold text-black"
-                >
-                  {status}: ₦{Number(amount).toLocaleString()}
-                </p>
-              ))}
-            </CardContent>
-          </Card>
-        ))}
+        {isAdmin ? (
+          Object.entries(data).map(([serviceId, record]) => (
+            <Card key={serviceId}>
+              <CardHeader>
+                <CardTitle>Service: {serviceId}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {Object.entries(record).map(([status, amount]) => (
+                  <p key={status} className="text-lg font-semibold text-black">
+                    {status}: ₦{Number(amount).toLocaleString()}
+                  </p>
+                ))}
+              </CardContent>
+            </Card>
+          ))
+        ) : (
+          <>
+            {/* Two placeholder boxes for non-admins */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Service: N/A</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-lg font-semibold text-black">Amount: null</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Service: N/A</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-lg font-semibold text-black">Amount: null</p>
+              </CardContent>
+            </Card>
+          </>
+        )}
       </div>
     </div>
   );

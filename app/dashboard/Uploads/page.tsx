@@ -66,7 +66,7 @@ const ServicePage = () => {
                         </div>
                         <div   className="text-xs text-gray-500 break-all">ID: {service.service_id}</div>
                         <div  onClick={() => router.push(`/dashboard/Uploads/${service.service_id}/content`)} className="flex float-right items-center text-primary group-hover:translate-x-1 transition-transform">
-                           <span className="text-sm font-medium mr-1">Explore</span>
+                           <span className="text-sm font-medium mr-1 cursor-pointer">Explore</span>
                         <ArrowRight className="w-4 h-4" />  
                         </div>
                         </div>
