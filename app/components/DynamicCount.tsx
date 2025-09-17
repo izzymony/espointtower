@@ -24,13 +24,13 @@ const DynamicCount = () => {
   const [data, setData] = useState<AmountResponse>({});
   const [error, setError] = useState("");
   const [mode, setMode] = useState<Mode>("week");
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const fetchAmounts = async () => {
     try {
       setError("");
-
-      setLoading(true)
+      setLoading(true);
 
       // ✅ read user from localStorage
       const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
@@ -39,9 +39,16 @@ const DynamicCount = () => {
         return;
       }
 
+      // ✅ Check admin role
+      if (storedUser?.role !== "admin") {
+        setIsAdmin(false);
+        return;
+      }
+      setIsAdmin(true);
+
       const username = storedUser.username;
       const serviceUnit = "none";
-      const today = formatDate(new Date()) ; /* */
+      const today = formatDate(new Date());
 
       const url = `https://espoint.onrender.com/espoint/get_all_in_one_booking_count_dynamic/${username}/${serviceUnit}/${mode}/${today}`;
       console.log("Fetching:", url);
@@ -59,7 +66,7 @@ const DynamicCount = () => {
       } else {
         setError("Unknown error occurred");
       }
-    } finally{
+    } finally {
       setLoading(false);
     }
   };
@@ -74,33 +81,53 @@ const DynamicCount = () => {
       <h2 className="text-xl font-bold">Dynamic Booking Count</h2>
 
       {error && <p className="text-red-500">{error}</p>}
-      {loading && <p>Loading...</p> }
+      {loading && <p>Loading...</p>}
 
-      {!loading && Object.keys(data).length === 0 && <p>No records Found</p>}
-
-      {/* Render results */}
-      <div className="">
-        {Object.entries(data).map(([date, statuses]) => (
-          <Card key={date}>
+      <div>
+        {isAdmin ? (
+          Object.keys(data).length === 0 ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>No records found</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-500">No booking data available.</p>
+              </CardContent>
+            </Card>
+          ) : (
+            Object.entries(data).map(([date, statuses]) => (
+              <Card key={date}>
+                <CardHeader>
+                  <label>Date:</label>
+                  <CardTitle>{date}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {Object.entries(statuses).map(([status, services]) => (
+                    <div key={status} className="mb-2">
+                      <h4 className="font-semibold">{status}</h4>
+                      {Object.entries(services).map(([serviceId, count]) => (
+                        <p key={serviceId}>
+                          Service {serviceId}:{" "}
+                          <span className="text-[#d4731e] font-bold">{count}</span>
+                        </p>
+                      ))}
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            ))
+          )
+        ) : (
+          // Non-admin placeholder box
+          <Card>
             <CardHeader>
-              <label className="">Date:</label>
-              <CardTitle>{date}</CardTitle>
+              <CardTitle>Service: N/A</CardTitle>
             </CardHeader>
             <CardContent>
-              {Object.entries(statuses).map(([status, services]) => (
-                <div key={status} className="mb-2">
-                  <h4 className="font-semibold">{status}</h4>
-                  {Object.entries(services).map(([serviceId, count]) => (
-                    <p key={serviceId}>
-                      Service {serviceId}:{" "}
-                      <span className="text-[#d4731e] font-bold">{count}</span>
-                    </p>
-                  ))}
-                </div>
-              ))}
+              <p className="text-lg font-semibold text-black">Count: null</p>
             </CardContent>
           </Card>
-        ))}
+        )}
       </div>
     </div>
   );
