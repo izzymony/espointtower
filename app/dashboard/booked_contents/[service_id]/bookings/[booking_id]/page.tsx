@@ -196,7 +196,7 @@
     if (!booking) return <div className="mt-20">No booking found.</div>;
   
     return (
-      <div className="bg-white min-h-screen p-6">
+      <div className="bg-white min-h-screen ">
         <h1 className="text-3xl font-bold mb-6">Booking Details</h1>
   
         <div className="bg-[#fafafa] p-6 rounded-lg shadow mb-8">
@@ -230,7 +230,7 @@
               </button>
             </div>
   
-            {bookingCodeSaved && <p className="text-blue-600 mt-1">Code saved ✅</p>}
+           
             {bookingCodeConfirmed && <p className="text-green-600 mt-1">Code confirmed ✅</p>}
           </div>
         </div>
