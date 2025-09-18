@@ -163,21 +163,31 @@ const BookingAmounts = () => {
         <p>No records found</p>
       )}
 
-      <div className="grid grid-cols-1 gap-3">
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
         {isAdmin ? (
           Object.entries(data).map(([serviceId, record]) => (
-            <Card key={serviceId}>
-              <CardHeader>
-                <CardTitle>Service: {serviceId}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {Object.entries(record).map(([status, amount]) => (
-                  <p key={status} className="text-lg font-semibold text-black">
-                    {status}: ₦{Number(amount).toLocaleString()}
-                  </p>
-                ))}
-              </CardContent>
-            </Card>
+            <Card key={serviceId} className="w-full max-w-md shadow-md rounded-xl">
+  <CardHeader className="border-b pb-2">
+    <CardTitle className="text-xl font-bold text-gray-800">
+      Service: <p className="text-black font-medium">{serviceId}</p>
+    </CardTitle>
+  </CardHeader>
+
+  <CardContent className="grid grid-cols-2 gap-4 pt-4">
+    {Object.entries(record).map(([status, amount]) => (
+      <div
+        key={status}
+        className="flex flex-col items-start bg-gray-50 p-3 rounded-lg hover:shadow-sm transition"
+      >
+        <span className="text-sm text-gray-500 capitalize">{status}</span>
+        <span className="text-lg font-semibold text-gray-800">
+          ₦{Number(amount).toLocaleString()}
+        </span>
+      </div>
+    ))}
+  </CardContent>
+</Card>
+
           ))
         ) : (
           <>
