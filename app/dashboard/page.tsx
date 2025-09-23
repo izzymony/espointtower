@@ -105,7 +105,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         {membersCount.map((service) => (
           <Card key={service.service_id}>
             <CardHeader>
@@ -128,9 +128,11 @@ export default function DashboardPage() {
         <ServicesCount />
         
         <DynamicCount />
-       <Amount />
+       
       </div>
-      
+      <div>
+        <Amount />
+      </div>
     </div>
   )
 }
