@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Eye, EyeOff, RefreshCw } from "lucide-react"
 import axios from "axios"
-
+import Image from "next/image"
 interface Member {
   member: string
   label: string
@@ -82,6 +82,16 @@ if(passcode.length < 6){
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
       <Card className="w-full max-w-md">
+        <div className="mb-6">
+        <Image
+          src="/espointtower.jpg"
+          alt="Espoint Logo"
+          width={110}
+          height={110}
+          className="mx-auto rounded-md shadow-lg"
+          priority
+        />
+      </div>
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">Sign In</CardTitle>
           <CardDescription className="text-center">
