@@ -87,7 +87,7 @@ export default function DashboardPage() {
 
   if (loading)
     return (
-      <div className="mt-20 flex h-[100vh] justify-center items-center">
+      <div className="mt-20 flex h-[100vh] justify-center items-center opacity-3">
         <Loader />
       </div>
     )

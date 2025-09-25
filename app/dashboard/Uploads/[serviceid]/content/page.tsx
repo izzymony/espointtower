@@ -59,7 +59,7 @@ const ContentService = () => {
       .finally(() => setLoading(false));
   }, [service_id]);
 
-  if (loading) return <div className="mt-20 flex h-[100vh] justify-center  items-center"><Loader /></div>;
+  if (loading) return <div className="mt-20 flex h-[100vh] justify-center opacity-3 items-center"><Loader /></div>;
   if (error) return <div className="text-red-500 mt-20">{error}</div>;
   if (serviceContent.length === 0)
     return <div className="mt-20">No content found for this service.</div>;

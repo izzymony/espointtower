@@ -80,7 +80,7 @@ if(passcode.length < 6){
  
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4 opacity-3">
       <Card className="w-full max-w-md">
         <div className="mb-6">
         <Image

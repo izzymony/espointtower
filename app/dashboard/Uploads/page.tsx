@@ -59,7 +59,7 @@ const ServicePage = () => {
                              <Image key={idx} src={img} alt={service.service_name} width={400} height={200} className="w-full h-48 object-cover rounded-md"/>      
                             ))}
                             <div className="">
-                        <div className="flex justify-between items-center px-2">
+                        <div className="flex justify-between items-center px-2 opacity-3">
 
                           <span className="font-semibold text-lg text-gray-800">{service.service_name}</span>
                           <span className={`rounded-full px-3 py-1 text-xs font-medium ${service.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-200 text-gray-600'}`}>{service.status}</span>
