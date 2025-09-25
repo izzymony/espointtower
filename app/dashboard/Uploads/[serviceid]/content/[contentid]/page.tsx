@@ -70,7 +70,7 @@ const ContentDetails = () => {
   const totalPrice = itemQuantity * (store.base_price || 0);
 
   return (
-    <div className="bg-white min-h-screen">
+    <div className="bg-white min-h-screen opacity-3">
       {/* Hero Section */}
       <div className="relative w-full h-[35vh] sm:h-[50vh] md:h-[60vh] lg:h-[70vh] mt-16">
         <Image

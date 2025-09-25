@@ -3,7 +3,7 @@ import Signin from "@/app/components/Signin"
 
 const page = () => {
   return (
-    <div>
+    <div className='opacity-3'>
       <Signin />
       <div className="text-center text-gray-500 mt-4">
         <p>Welcome to the Sign In page. Please enter your credentials to continue.</p>

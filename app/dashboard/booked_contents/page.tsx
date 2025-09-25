@@ -35,7 +35,7 @@ const Page = () => {
   }, []);
 
   return (
-    <div className="bg-white min-h-screen">
+    <div className="bg-white min-h-screen opacity-3">
       <h1 className='text-4xl font-bold'></h1>
       <div className='flex flex-col gap-6'>
       <div className='grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3'>

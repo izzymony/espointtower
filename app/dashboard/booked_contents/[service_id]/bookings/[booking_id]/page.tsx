@@ -211,7 +211,7 @@ const Page = () => {
     );
 
   return (
-    <div className="bg-white min-h-screen  py-10 max-w-4xl mx-auto">
+    <div className="bg-white min-h-screen opacity-3  py-10 max-w-4xl mx-auto">
       {/* Back Button */}
       <button
         onClick={() => router.back()}

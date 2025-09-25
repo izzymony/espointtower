@@ -404,7 +404,7 @@ const ServiceDetailPage = () => {
 
   if (!service) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center opacity-3">
         <div className="text-center">
           <h2 className="text-2xl font-bold mb-2">Service Not Found</h2>
           <p className="text-muted-foreground mb-4">The service you&apos;re looking for doesn&apos;t exist.</p>

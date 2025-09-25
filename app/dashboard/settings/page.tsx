@@ -186,7 +186,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 opacity-3">
       {/* HEADER */}
       <div className="flex items-center justify-between">
         <div>
