@@ -4,7 +4,9 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Loader from '@/app/components/Loading';
 import Image from 'next/image';
-import { Clock2 } from 'lucide-react';
+import { Clock2, Tag, Info, Box, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 interface ServiceStore {
   branding: { logo_url: string[] };
@@ -36,11 +38,12 @@ const ContentDetails = () => {
   const [content, setContent] = useState<ServiceContent | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   useEffect(() => {
     if (!content_id) return;
 
-    const url = `https://espoint.onrender.com/espoint/get_content/${content_id}`;
+    const url = `https://espoint-5shr.onrender.com/espoint/get_content/${content_id}`;
     setLoading(true);
     setError('');
 
@@ -62,103 +65,191 @@ const ContentDetails = () => {
         <Loader />
       </div>
     );
-  if (error) return <div className="text-red-500 mt-20">{error}</div>;
-  if (!content) return <div className="mt-20">No content found.</div>;
+  if (error) return <div className="text-red-500 mt-20 text-center">{error}</div>;
+  if (!content) return <div className="mt-20 text-center text-muted-foreground">No content found.</div>;
 
   const { store } = content;
-  const itemQuantity = store.rental_items[1]?.quantity || 0;
+  const itemQuantity = store.rental_items?.[1]?.quantity || 0;
   const totalPrice = itemQuantity * (store.base_price || 0);
+  
+  const images = store.branding?.logo_url?.length > 0 ? store.branding.logo_url : ['/camera-431119_1280.jpg'];
+
+  const nextImage = () => {
+    setCurrentImageIndex((prev) => (prev + 1) % images.length);
+  };
+
+  const prevImage = () => {
+    setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
+  };
 
   return (
-    <div className="bg-white min-h-screen opacity-3">
-      {/* Hero Section */}
-      <div className="relative w-full h-[35vh] sm:h-[50vh] md:h-[60vh] lg:h-[70vh] mt-16">
-        <Image
-          src={
-            store.branding.logo_url.length > 0
-              ? store.branding.logo_url[0]
-              : '/camera-431119_1280.jpg'
-          }
-          alt={store.name}
-          fill
-          className="object-cover rounded-xl"
-          priority
-        />
-        {/* Overlay */}
-        <div className="absolute inset-0 bg-black/40 rounded-xl"></div>
-        <div className="absolute bottom-6 left-4 sm:left-6 text-white">
-          <span className="px-2 py-1 sm:px-3 sm:py-1 bg-black text-white text-xs sm:text-sm rounded-full shadow">
-            {store.category}
-          </span>
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mt-3">
+    <div className="space-y-8 pt-6">
+      {/* HERO HEADER - Infused Design */}
+      <div className="relative overflow-hidden rounded-3xl bg-[#0a0a0a] px-8 py-12 shadow-2xl">
+        <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-primary/20 blur-3xl"></div>
+        <div className="absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-primary/10 blur-3xl"></div>
+
+        <div className="relative z-10 space-y-2">
+          <Badge variant="outline" className="text-primary border-primary/20 mb-2">{store.category || 'Service'}</Badge>
+          <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-white">
             {store.name}
           </h1>
+          <p className="text-gray-400 max-w-lg text-lg line-clamp-2">
+            {store.description}
+          </p>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
-        {/* Description */}
-        <section>
-          <h2 className="text-xl sm:text-2xl font-bold text-black">Description</h2>
-          <p className="mt-2 text-gray-700 text-sm sm:text-base leading-relaxed">
-            {store.description}
-          </p>
-        </section>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-        {/* Rental Items */}
-        <section>
-          <h2 className="text-xl sm:text-2xl font-bold text-black">Rental Items</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-1 gap-4 mt-4 text-gray-700 text-sm sm:text-base">
-            <p>
-              <span className="font-semibold">Item:</span>{' '}
-              {store.rental_items[1].item}
-            </p>
-            <p>
-              <span className="font-semibold">Quantity:</span>{' '}
-              {store.rental_items[1].quantity}
-            </p>
-            <p>
-              <span className="font-semibold">Duration:</span>{' '}
-              {store.rental_items[1].duration_hours} hrs
-            </p>
+        {/* Left Column: Image & Main Info */}
+        <div className="lg:col-span-2 space-y-8">
+          <Card className="border-none shadow-xl rounded-3xl overflow-hidden bg-white ring-1 ring-border/10">
+            <div className="relative w-full h-[400px] group">
+              <Image
+                src={images[currentImageIndex]}
+                alt={`${store.name} - Image ${currentImageIndex + 1}`}
+                fill
+                className="object-cover transition-all duration-500"
+                priority
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+              
+              {/* Navigation Arrows (Only show if multiple images) */}
+              {images.length > 1 && (
+                <>
+                  <button 
+                    onClick={prevImage}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white p-3 rounded-full backdrop-blur-sm transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100 z-10"
+                  >
+                    <ChevronLeft className="w-6 h-6" />
+                  </button>
+                  <button 
+                    onClick={nextImage}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white p-3 rounded-full backdrop-blur-sm transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100 z-10"
+                  >
+                    <ChevronRight className="w-6 h-6" />
+                  </button>
+                   {/* Pagination Dots */}
+                   <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-10">
+                     {images.map((_, idx) => (
+                       <div 
+                         key={idx} 
+                         className={`h-2 rounded-full transition-all shadow-sm ${idx === currentImageIndex ? 'w-8 bg-white' : 'w-2 bg-white/50'}`} 
+                       />
+                     ))}
+                   </div>
+                </>
+              )}
+            </div>
+            <CardContent className="p-8 space-y-6">
+              <div className="flex items-center gap-2 text-xl font-bold text-gray-900">
+                <Info className="w-6 h-6 text-primary" />
+                Description
+              </div>
+              <p className="text-gray-600 leading-relaxed text-lg">
+                {store.description}
+              </p>
+            </CardContent>
+          </Card>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card className="border-none shadow-lg rounded-3xl bg-white p-6 ring-1 ring-border/10">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-3 rounded-full bg-primary/10 text-primary">
+                  <Clock2 className="w-6 h-6" />
+                </div>
+                <h3 className="text-lg font-bold">Service Hours</h3>
+              </div>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
+                  <span className="text-gray-500 font-medium">Start Time</span>
+                  <span className="font-bold text-gray-900">{store.service_hours?.start || '09:00'} AM</span>
+                </div>
+                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
+                  <span className="text-gray-500 font-medium">End Time</span>
+                  <span className="font-bold text-gray-900">{store.service_hours?.end || '05:00'} PM</span>
+                </div>
+              </div>
+            </Card>
+
+            <Card className="border-none shadow-lg rounded-3xl bg-white p-6 ring-1 ring-border/10">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-3 rounded-full bg-primary/10 text-primary">
+                  <Box className="w-6 h-6" />
+                </div>
+                <h3 className="text-lg font-bold">Rental Item</h3>
+              </div>
+              {store.rental_items && store.rental_items[1] ? (
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-500">Item Name</span>
+                    <span className="font-bold">{store.rental_items[1].item}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-500">Quantity</span>
+                    <span className="font-bold">{store.rental_items[1].quantity}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-500">Duration</span>
+                    <span className="font-bold">{store.rental_items[1].duration_hours} hrs</span>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-gray-400 italic">No rental items configured.</p>
+              )}
+            </Card>
           </div>
-        </section>
+        </div>
 
-        {/* Check-in Details */}
-        <section>
-          <h2 className="text-xl sm:text-2xl font-bold text-black">Check-in Details</h2>
-          <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:gap-10 text-gray-700 text-sm sm:text-base">
-            <div>
-              <p className="font-medium">Start</p>
-              <div className="flex items-center gap-2">
-                <Clock2 className="text-black w-4 h-4 sm:w-5 sm:h-5" />
-                <span>{store.service_hours.start} AM</span>
+        {/* Right Column: Pricing & Status */}
+        <div className="space-y-6">
+          <Card className="border-none shadow-xl rounded-3xl bg-[#0a0a0a] text-white overflow-hidden relative">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 blur-3xl rounded-full"></div>
+            <CardContent className="p-8 space-y-6 relative z-10">
+              <h3 className="text-2xl font-bold">Pricing Summary</h3>
+
+              <div className="space-y-4">
+                <div className="flex justify-between items-center text-gray-400">
+                  <span>Base Price</span>
+                  <span>₦{store.base_price?.toLocaleString()}</span>
+                </div>
+                {itemQuantity > 0 && (
+                  <div className="flex justify-between items-center text-gray-400">
+                    <span>Quantity x{itemQuantity}</span>
+                    <span>(Included)</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="h-px bg-white/10 my-4"></div>
+
+              <div className="flex justify-between items-end">
+                <span className="text-gray-400 mb-1">Total Value</span>
+                <span className="text-4xl font-bold text-primary">₦{totalPrice.toLocaleString()}</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-none shadow-lg rounded-3xl bg-white p-6 ring-1 ring-border/10">
+            <h3 className="text-lg font-bold mb-4">Technical Details</h3>
+            <div className="space-y-3 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-500">Category</span>
+                <Badge variant="secondary" className="bg-gray-100 text-gray-700">{store.category}</Badge>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Eligible Roles</span>
+                <span className="font-medium text-right max-w-[150px]">{store.eligible_roles}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Duration</span>
+                <span className="font-medium">{store.duration_minutes} mins</span>
               </div>
             </div>
-            <div>
-              <p className="font-medium">End</p>
-              <div className="flex items-center gap-2">
-                <Clock2 className="text-black w-4 h-4 sm:w-5 sm:h-5" />
-                <span>{store.service_hours.end} PM</span>
-              </div>
-            </div>
-          </div>
-        </section>
+          </Card>
+        </div>
 
-        {/* Price Summary (only Base + Total) */}
-        <section className="bg-gray-50 border border-gray-200 rounded-xl p-6 shadow-md">
-          <h2 className="text-lg sm:text-xl font-bold text-black mb-4">Price Summary</h2>
-          <div className="flex justify-between text-gray-700 text-sm sm:text-base">
-            <span>Base Price</span>
-            <span>₦{store.base_price}</span>
-          </div>
-          <hr className="my-3 border-gray-300" />
-          <div className="flex justify-between font-bold text-black text-base sm:text-lg">
-            <span>Total</span>
-            <span>₦{totalPrice}</span>
-          </div>
-        </section>
       </div>
     </div>
   );

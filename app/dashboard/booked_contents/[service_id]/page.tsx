@@ -2,8 +2,10 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { ChevronLeft, Filter } from 'lucide-react'
+import { Button } from "@/components/ui/button"
 
-type Status = "pending" | "paid" | "confirmed" | "completed"
+type Status = "pending" | "paid" | "confirmed" | "completed" | "rejected"
 
 interface Booking {
   service_id: string;
@@ -24,13 +26,7 @@ const Booked = () => {
   const [loading, setLoading] = useState(false)
   const [filter, setFilter] = useState<Status>("pending")
 
-  const [checkedRole, setCheckedRole] = useState(false)
-
-  
-
   useEffect(() => {
-
-   
     const storedUser = JSON.parse(localStorage.getItem('user') || '{}')
 
     if (!storedUser?.username) {
@@ -44,7 +40,7 @@ const Booked = () => {
     }
 
     const username = storedUser.username
-    const url = `https://espoint.onrender.com/espoint/get_bookings_based_status_restricted/${username}/${filter}/${service_id}`
+    const url = `https://espoint-5shr.onrender.com/espoint/get_bookings_based_status_restricted/${username}/${filter}/${service_id}`
 
     setLoading(true)
     setError('')
@@ -52,10 +48,7 @@ const Booked = () => {
     fetch(url)
       .then((res) => {
         if (!res.ok) throw new Error('Failed to fetch bookings or user not permitted')
-
-          else if(!res.ok) throw Error("Not permitted")
         return res.json()
-        
       })
       .then((data) => {
         if (data.msg) {
@@ -68,92 +61,129 @@ const Booked = () => {
       .finally(() => setLoading(false))
   }, [service_id, filter])
 
-  
-
   return (
-    <div className="bg-white">
-      <div className='py-5'>
-      <div onClick={() => router.back()} className="bg-black py-2 rounded-lg px-3 p-2 w-fit text-white">
-      Back to listings
-    </div>
-    </div>
-      <div className=" mx-auto pb-16 ">
+    <div className="space-y-6 pt-6">
 
+      {/* HERO HEADER - Infused Design */}
+      <div className="relative overflow-hidden rounded-3xl bg-[#0a0a0a] px-8 py-10 shadow-2xl">
+        <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-[#FFC107]/20 blur-3xl"></div>
+        <div className="absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-[#FFC107]/10 blur-3xl"></div>
 
-        <h1 className="text-5xl font-bold mb-10 drop-shadow-lg">Bookings</h1>
-
-        {/* Filter Dropdown */}
-        <div className='flex flex-wrap gap-4 items-center mb-6'>
-          <select
-            value={filter}
-            onChange={(e) => setFilter(e.target.value as Status)}
-            className='border px-3 py-2 rounded'
+        <div className="relative z-10">
+          <Button
+            variant="ghost"
+            onClick={() => router.back()}
+            className="text-gray-400 hover:text-[#FFC107] hover:bg-white/5 mb-4 pl-0"
           >
-            <option value="pending">Pending</option>
-            <option value="paid">Paid</option>
-            <option value="confirmed">Confirmed</option>
-            <option value="completed">Completed</option>
-            <option value="rejected">Rejected</option>
-          </select>
+            <ChevronLeft className="w-4 h-4 mr-2" /> Back to listings
+          </Button>
+
+          <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-white">
+            Service <span className="text-[#FFC107]">Bookings</span>
+          </h1>
+          <p className="text-gray-400 mt-2 max-w-lg">
+            Manage and view status for all bookings related to this service.
+          </p>
+        </div>
+      </div>
+
+      {/* Main Content Card */}
+      <div className="rounded-3xl bg-white shadow-xl ring-1 ring-black/5 overflow-hidden">
+
+        {/* Controls Bar */}
+        <div className="p-6 border-b border-gray-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-2 text-sm font-medium text-gray-500">
+            {loading ? (
+              "Syncing..."
+            ) : (
+              <>Showing <span className="text-black font-bold">{bookings.length}</span> {filter} bookings</>
+            )}
+          </div>
+
+          <div className="flex items-center gap-3 bg-gray-50 rounded-xl p-1.5 border border-gray-100">
+            <Filter className="w-4 h-4 text-gray-400 ml-2" />
+            <select
+              value={filter}
+              onChange={(e) => setFilter(e.target.value as Status)}
+              className='bg-transparent border-none text-sm font-medium text-black focus:ring-0 cursor-pointer py-1'
+            >
+              <option value="pending">Pending</option>
+              <option value="paid">Paid</option>
+              <option value="confirmed">Confirmed</option>
+              <option value="completed">Completed</option>
+              <option value="rejected">Rejected</option>
+            </select>
+          </div>
         </div>
 
-        {loading && <div className="text-black text-lg">Loading {filter} bookings...</div>}
-        {error && <div className="text-red-500 text-lg">{error}</div>}
-        {!loading && !error && bookings.length === 0 ? (
-          <div className="bg-white rounded-2xl shadow-lg p-12 text-center text-gray-500 text-xl">
-            No {filter} bookings found.
-          </div>
-        ) : (
-          <div className=" overflow-x-auto rounded-lg">
-            <Table className=" text-lg rounded-lg">
-              <TableHeader>
-                <TableRow className="bg-black text-white">
-                  <TableHead className="py-5 px-6 text-lg text-white">Booking ID</TableHead>
-                  <TableHead className="py-5 px-6 text-lg text-white">Service</TableHead>
-                  <TableHead className="py-5 px-6 text-lg text-white">Status</TableHead>
-                  <TableHead className="py-5 px-6 text-lg text-white">Created</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {bookings.map((booking) => (
-                  <TableRow
-                    key={booking.booking_id}
-                    onClick={() =>
-                      router.push(`/dashboard/booked_contents/${service_id}/bookings/${booking.booking_id}`)
-                    }
-                    className=" cursor-pointer transition-all duration-200"
-                  >
-                    <TableCell className="break-all font-mono py-6 px-6 text-sm">{booking.booking_id}</TableCell>
-                    <TableCell className="font-semibold text-black py-6 px-6">{booking.service}</TableCell>
-                    <TableCell className="py-6 px-6">
-                      <span
-                        className={`px-4 py-2 rounded-full font-semibold text-sm shadow ${
-                          booking.status === 'pending'
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : booking.status === 'confirmed'
-                            ? 'bg-green-100 text-green-800'
-                            : booking.status === 'paid'
-                            ? 'bg-blue-100 text-blue-800'
-                            : booking.status === 'rejected'
-                            ? 'bg-red-700 text-white'
-                            :booking.status == 'completed'
-                            ?'bg-green-100 text-green-800'
-                            :'bg-gray-500 text-white'
-                            
-                        }`}
+        {/* Content Area */}
+        <div className="p-6">
+          {loading && <div className="text-gray-500 text-center py-12">Loading bookings...</div>}
+
+          {error && <div className="text-red-500 text-center py-12 bg-red-50 rounded-xl border border-red-100">{error}</div>}
+
+          {!loading && !error && bookings.length === 0 ? (
+            <div className="text-center py-20 px-4 border-2 border-dashed border-gray-100 rounded-2xl bg-gray-50/50">
+              <div className="text-gray-400 mb-2">No bookings found for this filter.</div>
+            </div>
+          ) : (
+            !loading && !error && (
+              <div className="overflow-hidden rounded-2xl border border-gray-100">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-[#0a0a0a] hover:bg-[#0a0a0a]">
+                      <TableHead className="py-4 px-6 text-white font-medium">Booking ID</TableHead>
+                      <TableHead className="py-4 px-6 text-white font-medium">Service</TableHead>
+                      <TableHead className="py-4 px-6 text-white font-medium">Status</TableHead>
+                      <TableHead className="py-4 px-6 text-white font-medium">Created</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {bookings.map((booking) => (
+                      <TableRow
+                        key={booking.booking_id}
+                        onClick={() =>
+                          router.push(`/dashboard/booked_contents/${service_id}/bookings/${booking.booking_id}`)
+                        }
+                        className="cursor-pointer transition-colors hover:bg-gray-50 group"
                       >
-                        {booking.status}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-gray-700 py-6 px-6">
-                      {new Date(booking.created).toLocaleString()}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        )}
+                        <TableCell className="font-mono text-xs text-gray-500 py-4 px-6 group-hover:text-black transition-colors">
+                          {booking.booking_id}
+                        </TableCell>
+                        <TableCell className="font-bold text-black py-4 px-6">
+                          {booking.service}
+                        </TableCell>
+                        <TableCell className="py-4 px-6">
+                          <span
+                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wide
+                              ${booking.status === 'pending'
+                                ? 'bg-yellow-100 text-yellow-800 border border-yellow-200'
+                                : booking.status === 'confirmed'
+                                  ? 'bg-green-100 text-green-800 border border-green-200'
+                                  : booking.status === 'paid'
+                                    ? 'bg-blue-100 text-blue-800 border border-blue-200'
+                                    : booking.status === 'rejected'
+                                      ? 'bg-red-100 text-red-800 border border-red-200'
+                                      : booking.status === 'completed'
+                                        ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                                        : 'bg-gray-100 text-gray-800'
+                              }
+                            `}
+                          >
+                            {booking.status}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-gray-500 py-4 px-6 text-sm">
+                          {new Date(booking.created).toLocaleDateString()}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )
+          )}
+        </div>
       </div>
     </div>
   )

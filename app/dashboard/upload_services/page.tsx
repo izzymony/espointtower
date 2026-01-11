@@ -1,7 +1,8 @@
 
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { ServicesAPI, CreateServiceContentPayload, Service } from "@/utils/servicesApi";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -12,7 +13,7 @@ import { Trash2, Plus, Clock, Image as ImageIcon, Tag, Percent, Clock as ClockIc
 import Image from "next/image";
 
 export default function ServiceForm() {
-  const [services, setServices] = useState<{ id: string; name: string }[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
   const [selectedService, setSelectedService] = useState("");
   const [createdBy, setCreatedBy] = useState("Admin User");
   const [description, setDescription] = useState("");
@@ -28,16 +29,52 @@ export default function ServiceForm() {
   const [durationMinutes, setDurationMinutes] = useState("");
   const [name, setName] = useState("");
   const [status, setStatus] = useState("approved");
+  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
+  useEffect(() => {
+    const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+    if (storedUser.username) {
+      setCreatedBy(storedUser.username);
+    }
+
+    const fetchServices = async () => {
+      setLoading(true);
+      try {
+        const data = await ServicesAPI.getAllService();
+        setServices(data);
+      } catch (error) {
+        console.error("Error fetching services:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchServices();
+  }, []);
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      const urls = Array.from(e.target.files).map((f) => URL.createObjectURL(f));
+      const files = Array.from(e.target.files);
+      const urls = files.map((f) => URL.createObjectURL(f));
       setLogoUrls([...logoUrls, ...urls]);
+      setSelectedFiles([...selectedFiles, ...files]);
     }
   };
 
   const removeLogo = (indexToRemove: number) => {
     setLogoUrls(logoUrls.filter((_, idx) => idx !== indexToRemove));
+    setSelectedFiles(selectedFiles.filter((_, idx) => idx !== indexToRemove));
   };
 
   const addRentalItem = () => {
@@ -56,44 +93,107 @@ export default function ServiceForm() {
     setRentalItems(copy);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Add validation here if needed
+
+    if (!selectedService) {
+      alert("Please select a service.");
+      return;
+    }
+
     if (!name.trim() || !description.trim()) {
       alert("Please fill in the service name and description.");
       return;
     }
-    alert("Form submitted!");
+
+    setSubmitting(true);
+
+    try {
+      const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+      const serviceObj = services.find((s) => s.id === selectedService);
+
+      // Convert files to base64
+      const base64Logos = await Promise.all(selectedFiles.map(fileToBase64));
+
+      const payload: CreateServiceContentPayload = {
+        created_by: createdBy,
+        service: serviceObj?.name || "",
+        service_id: selectedService,
+        service_unit: selectedService, // Using service ID (UUID) as unit
+        username: storedUser.username || "guest",
+        data: {
+          branding: {
+            logo_url: base64Logos,
+          },
+          eligible_roles: "all", // Default or add selection
+          service_hours: {
+            start: hoursStart,
+            end: hoursEnd,
+          },
+          rental_items: rentalItems.reduce((acc, ri, idx) => {
+            if (ri.item.trim()) {
+              acc[ri.item] = ri;
+            }
+            return acc;
+          }, {} as Record<string, typeof rentalItems[0]>),
+          discount_percent: discountPercent,
+          duration_minutes: durationMinutes,
+          base_price: basePrice,
+          category: category,
+          name: name,
+          status: status,
+          description: description,
+        },
+      };
+
+      await ServicesAPI.createServiceContent(payload);
+      alert("Service saved successfully!");
+      // Reset form or redirect
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      alert("Failed to save service. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
- const statusConfig = {
-  approved: { label: "Approved", variant: "default" as const },
-  pending: { label: "Pending", variant: "secondary" as const },
-  suspended: { label: "Suspended", variant: "destructive" as const },
-  active: { label: "Active", variant: "outline" as const }, // changed from "success"
-};
+  const statusConfig = {
+    approved: { label: "Approved", variant: "default" as const },
+    pending: { label: "Pending", variant: "secondary" as const },
+    suspended: { label: "Suspended", variant: "destructive" as const },
+    active: { label: "Active", variant: "outline" as const }, // changed from "success"
+  };
 
   return (
-    <div className="max-w-5xl mx-auto py-10 ">
-      <Card className="shadow-2xl rounded-3xl bg-white">
-        <CardHeader className="pb-6">
-          <CardTitle className="text-3xl font-bold text-black flex items-center gap-2">
-            <ImageIcon className="w-8 h-8 text-black" />
-            Create Service
-          </CardTitle>
-        </CardHeader>
+    <div className="max-w-5xl mx-auto space-y-8 pt-6">
 
+      {/* HERO HEADER - Infused Design */}
+      <div className="relative overflow-hidden rounded-3xl bg-[#0a0a0a] px-8 py-12 shadow-2xl">
+        <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-primary/20 blur-3xl"></div>
+        <div className="absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-primary/10 blur-3xl"></div>
+
+        <div className="relative z-10 space-y-2">
+          <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-white">
+            Create <span className="text-primary">Service</span>
+          </h1>
+          <p className="text-gray-400 max-w-lg text-lg">
+            Add new service offerings to your portfolio with comprehensive details and pricing.
+          </p>
+        </div>
+      </div>
+
+      <Card className="shadow-xl rounded-3xl bg-white border-none ring-1 ring-border/10 overflow-hidden">
         <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-8">
+          <CardContent className="space-y-8 pt-8 px-8 pb-10">
 
             {/* Service Selector & Created By */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <Label htmlFor="service-select" className="text-sm font-medium text-gray-700">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-3">
+                <Label htmlFor="service-select" className="text-sm font-semibold text-foreground/80">
                   Choose Service
                 </Label>
                 <Select value={selectedService} onValueChange={setSelectedService}>
-                  <SelectTrigger id="service-select" className="rounded-xl">
+                  <SelectTrigger id="service-select" className="h-12 rounded-2xl border-border/50 bg-muted/20 focus:ring-primary/50 text-base">
                     <SelectValue placeholder="-- Select Service --" />
                   </SelectTrigger>
                   <SelectContent>
@@ -105,79 +205,88 @@ export default function ServiceForm() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="created-by" className="text-sm font-medium text-gray-700">
+              <div className="space-y-3">
+                <Label htmlFor="created-by" className="text-sm font-semibold text-foreground/80">
                   Created By
                 </Label>
                 <Input
                   id="created-by"
                   value={createdBy}
                   readOnly
-                  className="bg-gray-100 text-black rounded-xl border-gray-300"
-                  placeholder="Admin User"
+                  className="h-12 bg-muted/10 text-muted-foreground rounded-2xl border-border/30 font-medium"
                 />
               </div>
             </div>
 
             {/* Service Name */}
-            <div className="space-y-2">
-              <Label htmlFor="service-name" className="text-sm font-medium text-gray-700">
-                Service Name <span className="text-red-500">*</span>
+            <div className="space-y-3">
+              <Label htmlFor="service-name" className="text-sm font-semibold text-foreground/80">
+                Service Name <span className="text-primary">*</span>
               </Label>
               <Input
                 id="service-name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="rounded-xl border-gray-300 focus:border-black"
+                className="h-12 rounded-2xl border-border/50 bg-muted/20 focus:border-primary focus:ring-primary/20 text-lg font-medium placeholder:text-muted-foreground/40"
                 placeholder="Enter service name"
                 required
               />
             </div>
 
             {/* Description */}
-            <div className="space-y-2">
-              <Label htmlFor="description" className="text-sm font-medium text-gray-700">
-                Description <span className="text-red-500">*</span>
+            <div className="space-y-3">
+              <Label htmlFor="description" className="text-sm font-semibold text-foreground/80">
+                Description <span className="text-primary">*</span>
               </Label>
               <textarea
                 id="description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 text-black rounded-xl resize-vertical focus:border-black"
-                rows={4}
+                className="w-full px-4 py-4 border border-border/50 bg-muted/20 text-foreground rounded-2xl resize-vertical focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all placeholder:text-muted-foreground/40 text-base"
+                rows={5}
                 placeholder="Enter a detailed description of the service..."
                 required
               />
             </div>
 
             {/* Upload Logos */}
-            <div className="space-y-2">
-              <Label htmlFor="logo-upload" className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                <ImageIcon className="w-4 h-4" />
+            <div className="space-y-3">
+              <Label htmlFor="logo-upload" className="text-sm font-semibold text-foreground/80 flex items-center gap-2">
+                <ImageIcon className="w-4 h-4 text-primary" />
                 Upload Logos
               </Label>
-              <Input
-                id="logo-upload"
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={handleLogoUpload}
-                className="rounded-xl border-gray-300"
-              />
+              <div className="border-2 border-dashed border-border hover:border-primary transition-all duration-300 rounded-3xl p-8 flex flex-col items-center justify-center bg-muted/10 hover:bg-muted/20 group cursor-pointer" onClick={() => document.getElementById('logo-upload')?.click()}>
+                <Input
+                  id="logo-upload"
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleLogoUpload}
+                  className="hidden"
+                />
+                <div className="p-4 bg-primary/10 rounded-full mb-4 group-hover:scale-110 transition-transform">
+                  <Plus className="w-6 h-6 text-primary" />
+                </div>
+                <p className="font-medium text-foreground">Click to upload or drag and drop</p>
+                <p className="text-xs text-muted-foreground mt-1">Supported formats: JPG, PNG, WEBP</p>
+              </div>
+
               {logoUrls.length > 0 && (
-                <div className="flex flex-wrap gap-3 mt-4">
+                <div className="flex flex-wrap gap-4 mt-6">
                   {logoUrls.map((url, idx) => (
-                    <div key={idx} className="relative w-20 h-20 border border-gray-300 overflow-hidden rounded-xl shadow-sm">
+                    <div key={idx} className="relative w-28 h-28 border border-border/20 overflow-hidden rounded-2xl shadow-sm group">
                       <Image src={url} alt={`logo-${idx}`} fill className="object-cover" />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeLogo(idx)}
-                        className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full p-0"
-                      >
-                        <Trash2 className="w-3 h-3" />
-                      </Button>
+                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={(e) => { e.stopPropagation(); removeLogo(idx); }}
+                          className="w-10 h-10 text-white hover:text-red-400 hover:bg-white/10 rounded-full"
+                        >
+                          <Trash2 className="w-5 h-5" />
+                        </Button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -185,30 +294,30 @@ export default function ServiceForm() {
             </div>
 
             {/* Operating Hours */}
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                <Clock className="w-4 h-4" />
+            <div className="space-y-3">
+              <Label className="text-sm font-semibold text-foreground/80 flex items-center gap-2">
+                <Clock className="w-4 h-4 text-primary" />
                 Operating Hours
               </Label>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <Label htmlFor="hours-start" className="text-xs text-gray-600">Start Time</Label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 bg-muted/10 rounded-3xl border border-border/30">
+                <div className="space-y-2">
+                  <Label htmlFor="hours-start" className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Start Time</Label>
                   <Input
                     id="hours-start"
                     type="time"
                     value={hoursStart}
                     onChange={(e) => setHoursStart(e.target.value)}
-                    className="rounded-xl border-gray-300"
+                    className="h-12 rounded-xl border-border/50 bg-white focus:ring-primary/20"
                   />
                 </div>
-                <div className="space-y-1">
-                  <Label htmlFor="hours-end" className="text-xs text-gray-600">End Time</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="hours-end" className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">End Time</Label>
                   <Input
                     id="hours-end"
                     type="time"
                     value={hoursEnd}
                     onChange={(e) => setHoursEnd(e.target.value)}
-                    className="rounded-xl border-gray-300"
+                    className="h-12 rounded-xl border-border/50 bg-white focus:ring-primary/20"
                   />
                 </div>
               </div>
@@ -216,45 +325,45 @@ export default function ServiceForm() {
 
             {/* Rental Items */}
             <div className="space-y-4">
-              <Label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                <Tag className="w-4 h-4" />
+              <Label className="text-sm font-semibold text-foreground/80 flex items-center gap-2">
+                <Tag className="w-4 h-4 text-primary" />
                 Rental Items
               </Label>
-              <div className="bg-gray-50 rounded-xl p-4">
-                <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-3 mb-4 font-semibold text-black text-sm bg-white rounded-lg p-3">
+              <div className="bg-muted/10 border border-border/30 rounded-3xl p-6">
+                <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-4 font-semibold text-foreground text-sm bg-white/50 border border-border/20 rounded-xl p-4">
                   <span className="hidden sm:block">Item</span>
                   <span>Quantity</span>
                   <span>Duration (hrs)</span>
                   <span className="text-center">Action</span>
                 </div>
                 {rentalItems.map((ri, idx) => (
-                  <div key={idx} className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-3 items-end bg-white rounded-lg p-3 shadow-sm">
+                  <div key={idx} className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-4 items-end bg-white border border-border/40 rounded-2xl p-4 mb-4 shadow-sm hover:shadow-md transition-shadow">
                     <Input
                       value={ri.item}
                       onChange={(e) => updateRentalItem(idx, "item", e.target.value)}
                       placeholder="e.g., Tent"
-                      className="rounded-xl border-gray-300"
+                      className="rounded-xl border-border/50 bg-transparent"
                     />
                     <Input
                       value={ri.quantity}
                       onChange={(e) => updateRentalItem(idx, "quantity", e.target.value)}
-                      placeholder="e.g., 2"
+                      placeholder="Qty"
                       type="number"
-                      className="rounded-xl border-gray-300"
+                      className="rounded-xl border-border/50 bg-transparent"
                     />
                     <Input
                       value={ri.duration_hours}
                       onChange={(e) => updateRentalItem(idx, "duration_hours", e.target.value)}
-                      placeholder="e.g., 24"
+                      placeholder="Hours"
                       type="number"
-                      className="rounded-xl border-gray-300"
+                      className="rounded-xl border-border/50 bg-transparent"
                     />
                     <Button
                       type="button"
-                      variant="outline"
+                      variant="ghost"
                       size="sm"
                       onClick={() => removeRentalItem(idx)}
-                      className="rounded-xl border-red-300 text-red-600 hover:bg-red-50 w-full sm:w-auto"
+                      className="rounded-xl text-destructive hover:bg-destructive/10 hover:text-destructive w-full sm:w-auto h-10"
                       disabled={rentalItems.length === 1}
                     >
                       <Trash2 className="w-4 h-4" />
@@ -265,7 +374,7 @@ export default function ServiceForm() {
                   type="button"
                   variant="outline"
                   onClick={addRentalItem}
-                  className="w-full sm:w-auto bg-black text-white hover:bg-gray-800 rounded-xl mt-3"
+                  className="w-full sm:w-auto mt-2 border-primary text-primary hover:bg-primary hover:text-black font-semibold rounded-full px-6 transition-all"
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Add Rental Item
@@ -276,22 +385,25 @@ export default function ServiceForm() {
             {/* Pricing & Details */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <div className="space-y-2">
-                <Label htmlFor="base-price" className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                  <Tag className="w-4 h-4" />
-                  Base Price 
+                <Label htmlFor="base-price" className="text-sm font-semibold text-foreground/80 flex items-center gap-2">
+                  <Tag className="w-4 h-4 text-primary" />
+                  Base Price
                 </Label>
-                <Input
-                  id="base-price"
-                  value={basePrice}
-                  onChange={(e) => setBasePrice(e.target.value)}
-                  type="number"
-                  step="0.01"
-                  placeholder="0.00"
-                  className="rounded-xl border-gray-300"
-                />
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                  <Input
+                    id="base-price"
+                    value={basePrice}
+                    onChange={(e) => setBasePrice(e.target.value)}
+                    type="number"
+                    step="0.01"
+                    placeholder="0.00"
+                    className="pl-8 h-11 rounded-xl border-border/50 bg-muted/10 focus:ring-primary/20 font-medium"
+                  />
+                </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="category" className="text-sm font-medium text-gray-700">
+                <Label htmlFor="category" className="text-sm font-semibold text-foreground/80">
                   Category
                 </Label>
                 <Input
@@ -299,12 +411,12 @@ export default function ServiceForm() {
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
                   placeholder="e.g., Outdoor"
-                  className="rounded-xl border-gray-300"
+                  className="h-11 rounded-xl border-border/50 bg-muted/10 focus:ring-primary/20"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="discount" className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                  <Percent className="w-4 h-4" />
+                <Label htmlFor="discount" className="text-sm font-semibold text-foreground/80 flex items-center gap-2">
+                  <Percent className="w-4 h-4 text-primary" />
                   Discount %
                 </Label>
                 <Input
@@ -313,13 +425,13 @@ export default function ServiceForm() {
                   onChange={(e) => setDiscountPercent(e.target.value)}
                   type="number"
                   placeholder="0"
-                  className="rounded-xl border-gray-300"
+                  className="h-11 rounded-xl border-border/50 bg-muted/10 focus:ring-primary/20"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="duration" className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                  <ClockIcon className="w-4 h-4" />
-                  Duration (minutes)
+                <Label htmlFor="duration" className="text-sm font-semibold text-foreground/80 flex items-center gap-2">
+                  <ClockIcon className="w-4 h-4 text-primary" />
+                  Duration (min)
                 </Label>
                 <Input
                   id="duration"
@@ -327,40 +439,42 @@ export default function ServiceForm() {
                   onChange={(e) => setDurationMinutes(e.target.value)}
                   type="number"
                   placeholder="60"
-                  className="rounded-xl border-gray-300"
+                  className="h-11 rounded-xl border-border/50 bg-muted/10 focus:ring-primary/20"
                 />
               </div>
             </div>
 
             {/* Status */}
-            <div className="space-y-2">
-              <Label htmlFor="status" className="text-sm font-medium text-gray-700">
+            <div className="space-y-3">
+              <Label htmlFor="status" className="text-sm font-semibold text-foreground/80">
                 Status
               </Label>
-              <Select value={status} onValueChange={setStatus}>
-                <SelectTrigger id="status" className="rounded-xl">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(statusConfig).map(([key, { label }]) => (
-                    <SelectItem key={key} value={key}>
-                      {label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Badge variant={statusConfig[status as keyof typeof statusConfig]?.variant || "default"} className="mt-2">
-                {statusConfig[status as keyof typeof statusConfig]?.label}
-              </Badge>
+              <div className="flex items-center gap-4">
+                <Select value={status} onValueChange={setStatus}>
+                  <SelectTrigger id="status" className="w-[180px] h-11 rounded-xl border-border/50 bg-muted/10">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(statusConfig).map(([key, { label }]) => (
+                      <SelectItem key={key} value={key}>
+                        {label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Badge variant={statusConfig[status as keyof typeof statusConfig]?.variant || "default"} className="h-8 px-3 rounded-lg text-xs uppercase tracking-wider shadow-sm">
+                  {statusConfig[status as keyof typeof statusConfig]?.label}
+                </Badge>
+              </div>
             </div>
 
-            {/* Submit */}
-            <div className="pt-6 flex justify-end">
+            <div className="pt-8 flex justify-end">
               <Button
                 type="submit"
-                className="bg-black text-white px-8 py-3 rounded-xl hover:bg-gray-800 shadow-lg transition-colors"
+                disabled={submitting}
+                className="bg-primary text-black font-bold text-lg px-10 py-6 rounded-full hover:bg-primary/90 shadow-[0_0_25px_rgba(255,193,7,0.4)] transition-all transform hover:scale-105"
               >
-                Save Service
+                {submitting ? "Saving..." : "Save Service"}
               </Button>
             </div>
 
