@@ -52,7 +52,7 @@ import {
 const STAFF_ROLES = [
   { value: "booking", label: "Bookings" },
   { value: "admin", label: "Admin" },
-  { value: "content", label: "Content Creator" },
+  { value: "content", label: "Content" },
 
 ] as const;
 
@@ -95,7 +95,7 @@ export default function ServicesPage() {
 
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
 
-const router = useRouter()
+  const router = useRouter()
 
   useEffect(() => {
     const userData = localStorage.getItem("user");
@@ -218,22 +218,22 @@ const router = useRouter()
 
   // New addMemberToService for multi-role
   const addMemberToService = (memberId: string, role: string[] = []) => {
-  const member = members.find((m) => m.id === memberId);
-  if (!member) return;
-  const newMember: ServiceMember = { 
-    memberId: member.id, 
-    memberName: member.name,
-            // <-- REQUIRED!
-    roles: role 
+    const member = members.find((m) => m.id === memberId);
+    if (!member) return;
+    const newMember: ServiceMember = {
+      memberId: member.id,
+      memberName: member.name,
+      // <-- REQUIRED!
+      roles: role
+    };
+    setFormData((prev) => ({
+      ...prev,
+      members: [
+        ...prev.members.filter((m) => m.memberId !== memberId),
+        newMember
+      ],
+    }));
   };
-  setFormData((prev) => ({
-    ...prev,
-    members: [
-      ...prev.members.filter((m) => m.memberId !== memberId), 
-      newMember
-    ],
-  }));
-};
 
   const removeMemberFromService = (memberId: string) => {
     setFormData((prev) => ({
@@ -242,24 +242,24 @@ const router = useRouter()
     }));
   };
 
- const openEditDialog = (service: Service) => {
-  setEditingService(service);
+  const openEditDialog = (service: Service) => {
+    setEditingService(service);
 
-  // Helper type covers both possible shapes
-  type PossibleMember = 
-    | ServiceMember                          // modern: { memberId, memberName, roles }
-    | { memberId: string; memberName: string; role?: string }; // legacy
+    // Helper type covers both possible shapes
+    type PossibleMember =
+      | ServiceMember                          // modern: { memberId, memberName, roles }
+      | { memberId: string; memberName: string; role?: string }; // legacy
 
-  // Normalize members array so all have `roles: string[]`
-  const members: ServiceMember[] = Array.isArray(service.members)
-    ? service.members.map((m: PossibleMember) => {
+    // Normalize members array so all have `roles: string[]`
+    const members: ServiceMember[] = Array.isArray(service.members)
+      ? service.members.map((m: PossibleMember) => {
         if ('roles' in m && Array.isArray(m.roles)) {
           return m;
         } else if ('role' in m && typeof m.role === 'string') {
           return {
             memberId: m.memberId,
             memberName: m.memberName,
-           
+
             roles: m.role ? [m.role] : [],
           };
         }
@@ -267,20 +267,20 @@ const router = useRouter()
         return {
           memberId: m.memberId,
           memberName: m.memberName,
-          
+
           roles: [],
         };
       })
-    : [];
+      : [];
 
-  setFormData({
-    name: service.name,
-    description: service.description || "",
-    availability: service.availability || {},
-    members,
-  });
-  setIsEditDialogOpen(true);
-};
+    setFormData({
+      name: service.name,
+      description: service.description || "",
+      availability: service.availability || {},
+      members,
+    });
+    setIsEditDialogOpen(true);
+  };
 
   // This function is used to update only the roles of a member
   const updateMemberRoles = (memberId: string, newRoles: string[]) => {
@@ -293,95 +293,109 @@ const router = useRouter()
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Services</h1>
-          <p className="text-muted-foreground">
-            Manage services, assign staff members, and set availability.
-          </p>
-        </div>
+    <div className="space-y-8 pt-6">
 
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" /> Add Service
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Add New Service</DialogTitle>
-              <DialogDescription>
-                Create a new service and assign staff members.
-              </DialogDescription>
-            </DialogHeader>
-            <ServiceForm
-              formData={formData}
-              setFormData={setFormData}
-              members={members}
-              addMember={addMemberToService}
-              removeMember={removeMemberFromService}
-              updateMemberRoles={updateMemberRoles}
-            />
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-                Cancel
+      {/* HERO HEADER - Infused Design */}
+      <div className="relative overflow-hidden rounded-3xl bg-[#0a0a0a] px-8 py-12 shadow-2xl">
+        <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-primary/20 blur-3xl"></div>
+        <div className="absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-primary/10 blur-3xl"></div>
+
+        <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+          <div className="space-y-2">
+            <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-white">
+              Services <span className="text-primary">Management</span>
+            </h1>
+            <p className="text-gray-400 max-w-lg text-lg">
+              Manage your service offerings, assign staff members, and configure availability schedules.
+            </p>
+          </div>
+
+          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-primary text-black font-bold text-lg px-8 py-6 rounded-full hover:bg-primary/90 shadow-[0_0_20px_rgba(255,193,7,0.4)] transition-all transform hover:scale-105">
+                <Plus className="mr-2 h-5 w-5" /> Add Service
               </Button>
-              <Button onClick={handleAddService}>Add Service</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+            </DialogTrigger>
+            <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto rounded-3xl border-border/50 shadow-2xl bg-white">
+              <DialogHeader>
+                <DialogTitle className="text-2xl font-bold">Add New Service</DialogTitle>
+                <DialogDescription>
+                  Create a new service and assign staff members.
+                </DialogDescription>
+              </DialogHeader>
+              <ServiceForm
+                formData={formData}
+                setFormData={setFormData}
+                members={members}
+                addMember={addMemberToService}
+                removeMember={removeMemberFromService}
+                updateMemberRoles={updateMemberRoles}
+              />
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsAddDialogOpen(false)} className="rounded-full border-border/50">
+                  Cancel
+                </Button>
+                <Button onClick={handleAddService} className="rounded-full bg-primary text-black font-bold hover:bg-primary/90">Add Service</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Services</CardTitle>
-          <CardDescription>
-            Manage your services and assigned staff members.
+      <Card className="shadow-xl rounded-3xl bg-white border-none ring-1 ring-border/10 overflow-hidden">
+        <CardHeader className="pl-8 pt-8 pb-4">
+          <CardTitle className="text-xl font-bold flex items-center gap-2">
+            <div className="h-8 w-1 bg-primary rounded-full"></div>
+            Service Offerings
+          </CardTitle>
+          <CardDescription className="pl-3">
+            View and manage all active services.
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-0 pb-0">
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[200px]">ID</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Created By</TableHead>
-                  <TableHead>Created Date</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                <TableRow className="hover:bg-transparent border-b border-border/10">
+                  <TableHead className="w-[100px] pl-8 font-semibold text-foreground/70">ID</TableHead>
+                  <TableHead className="font-semibold text-foreground/70">Name</TableHead>
+                  <TableHead className="font-semibold text-foreground/70">Created By</TableHead>
+                  <TableHead className="font-semibold text-foreground/70">Created Date</TableHead>
+                  <TableHead className="text-right pr-8 font-semibold text-foreground/70">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {services.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-6">
+                    <TableCell colSpan={6} className="text-center py-12 text-muted-foreground">
                       No services found.
                     </TableCell>
                   </TableRow>
                 ) : (
                   services.map((service) => (
-                    <TableRow key={service.id} className="cursor-pointer" onClick={() => router.push(`/dashboard/services/${service.id}`)}>
-                      <TableCell className="font-mono text-xs">{service.id}</TableCell>
-                      <TableCell>{service.name}</TableCell>
-                      <TableCell>{service.createdBy || "-"}</TableCell>
-                      <TableCell>
+                    <TableRow key={service.id} className="cursor-pointer hover:bg-primary/5 transition-colors border-b border-border/10 group" onClick={() => router.push(`/dashboard/services/${service.id}`)}>
+                      <TableCell className="font-mono text-xs text-muted-foreground pl-8 py-5">{service.id.slice(0, 8)}...</TableCell>
+                      <TableCell className="font-semibold text-foreground py-5">{service.name}</TableCell>
+                      <TableCell className="text-muted-foreground py-5">{service.createdBy || "-"}</TableCell>
+                      <TableCell className="text-muted-foreground py-5">
                         {service.createdAt
                           ? new Date(service.createdAt).toLocaleDateString()
                           : "-"}
                       </TableCell>
-                      <TableCell className="text-right space-x-2">
+                      <TableCell className="text-right space-x-2 pr-8 py-5">
                         <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => openEditDialog(service)}
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8 rounded-full hover:bg-primary/10 hover:text-primary transition-colors"
+                          onClick={(e) => { e.stopPropagation(); openEditDialog(service); }}
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
                         <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => handleDeleteService(service.id)}
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8 rounded-full hover:bg-destructive/10 hover:text-destructive transition-colors"
+                          onClick={(e) => { e.stopPropagation(); handleDeleteService(service.id); }}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -397,9 +411,9 @@ const router = useRouter()
 
       {/* Edit dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto rounded-3xl border-border/50 shadow-2xl bg-white">
           <DialogHeader>
-            <DialogTitle>Edit Service</DialogTitle>
+            <DialogTitle className="text-2xl font-bold">Edit Service</DialogTitle>
             <DialogDescription>
               Update service info and staff assignments.
             </DialogDescription>
@@ -413,10 +427,10 @@ const router = useRouter()
             updateMemberRoles={updateMemberRoles}
           />
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)} className="rounded-full border-border/50">
               Cancel
             </Button>
-            <Button onClick={handleEditService}>Update Service</Button>
+            <Button onClick={handleEditService} className="rounded-full bg-primary text-black font-bold hover:bg-primary/90">Update Service</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

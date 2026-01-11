@@ -1,4 +1,4 @@
-const BASE_URL = "https://espoint.onrender.com/espoint";
+const BASE_URL = "https://espoint-5shr.onrender.com/espoint";
 
 export const memberApi = {
   // GET members

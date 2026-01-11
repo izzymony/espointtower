@@ -51,8 +51,8 @@ const Page = () => {
 
   // Check user role
   useEffect(() => {
-    const storedUser  = JSON.parse(localStorage.getItem("user") || "{}");
-    if (storedUser ?.role === "admin" || storedUser ?.from === "internal") {
+    const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+    if (storedUser?.role === "admin" || storedUser?.from === "internal") {
       setIsInternal(true);
     } else {
       setIsInternal(false);
@@ -66,7 +66,7 @@ const Page = () => {
     if (!booking_id) return;
     setLoading(true);
 
-    fetch(`https://espoint.onrender.com/espoint/get_booking/${booking_id}`)
+    fetch(`https://espoint-5shr.onrender.com/espoint/get_booking/${booking_id}`)
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch booking");
         return res.json();
@@ -92,8 +92,8 @@ const Page = () => {
           err instanceof Error
             ? err.message
             : typeof err === "string"
-            ? err
-            : "Failed to fetch booking";
+              ? err
+              : "Failed to fetch booking";
         setError(msg);
       })
       .finally(() => setLoading(false));
@@ -104,8 +104,8 @@ const Page = () => {
     if (!booking || !isInternal) return;
 
     try {
-      const storedUser  = JSON.parse(localStorage.getItem("user") || "{}");
-      if (!storedUser ?.username) {
+      const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+      if (!storedUser?.username) {
         setMessage("User  not found in localStorage");
         return;
       }
@@ -113,7 +113,7 @@ const Page = () => {
       const payload = {
         service_id: booking.service_id || "",
         booking_id: booking.booking_id,
-        username: storedUser .username,
+        username: storedUser.username,
         from: "external",
         data: {
           client_email: booking.store.client_email,
@@ -128,7 +128,7 @@ const Page = () => {
           service_package_id: booking.store.service_package_id,
           status,
           completed_date: completedDate,
-         
+
         },
       };
 
@@ -150,8 +150,8 @@ const Page = () => {
         err instanceof Error
           ? err.message
           : typeof err === "string"
-          ? err
-          : "Error saving booking";
+            ? err
+            : "Error saving booking";
       setMessage(msg);
     }
   };
@@ -161,13 +161,13 @@ const Page = () => {
     if (!booking || !isInternal) return;
 
     try {
-      const storedUser  = JSON.parse(localStorage.getItem("user") || "{}");
-      if (!storedUser ?.username) {
+      const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+      if (!storedUser?.username) {
         setMessage("User  not found in localStorage");
         return;
       }
 
-      const confirmUrl = `https://espoint.onrender.com/espoint/confirm_booking_code/${storedUser .username}/${booking.booking_id}/${bookingCode}`;
+      const confirmUrl = `https://espoint.onrender.com/espoint/confirm_booking_code/${storedUser.username}/${booking.booking_id}/${bookingCode}`;
       const confirmRes = await fetch(confirmUrl, { method: "GET" });
       if (!confirmRes.ok) throw new Error("Failed to confirm booking code");
       const confirmResult = await confirmRes.json();
@@ -184,8 +184,8 @@ const Page = () => {
         err instanceof Error
           ? err.message
           : typeof err === "string"
-          ? err
-          : "Error confirming booking code";
+            ? err
+            : "Error confirming booking code";
       setMessage(msg);
     }
   };
@@ -211,202 +211,189 @@ const Page = () => {
     );
 
   return (
-    <div className="bg-white min-h-screen opacity-3  py-10 max-w-4xl mx-auto">
-      {/* Back Button */}
-      <button
-        onClick={() => router.back()}
-        className="inline-block mb-8 bg-black text-white px-5 py-2 rounded-md shadow-md hover:bg-gray-900 transition"
-        aria-label="Back to bookings"
-      >
-        &larr; Back to bookings
-      </button>
+    <div className="space-y-6 pt-6 max-w-5xl mx-auto pb-20">
 
-      <h1 className="text-4xl font-extrabold mb-8 text-black border-b border-gray-300 pb-3">
-        Booking Details
-      </h1>
+      {/* HERO HEADER - Infused Design */}
+      <div className="relative overflow-hidden rounded-3xl bg-[#0a0a0a] px-8 py-10 shadow-2xl">
+        <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-[#FFC107]/20 blur-3xl"></div>
+        <div className="absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-[#FFC107]/10 blur-3xl"></div>
 
-      {/* Booking Info */}
-      <section className="bg-white bg-opacity-5 rounded-lg p-6 mb-10 shadow-md">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-black">
-          <div>
-            <p className="mb-2">
-              <span className="font-semibold">Client Name:</span>{" "}
-              {booking.store.client_name}
-            </p>
-            <p className="mb-2">
-              <span className="font-semibold">Email:</span>{" "}
-              {booking.store.client_email}
-            </p>
-            <p className="mb-2">
-              <span className="font-semibold">Phone:</span>{" "}
-              {booking.store.client_phone}
-            </p>
-          </div>
-          <div>
-            <p className="mb-2">
-              <span className="font-semibold">Amount:</span> {booking.store.amount}
-            </p>
-            <p className="mb-2">
-              <span className="font-semibold">Currency:</span>{" "}
-              {booking.store.currency}
-            </p>
-            <p className="mb-2">
-              <span className="font-semibold">Status:</span> {booking.store.status}
-            </p>
-            
-          </div>
-        </div>
-      </section>
-
-      {/* Booking Code Section */}
-      <section className="bg-white bg-opacity-5 rounded-lg p-6 mb-10 shadow-md">
-        <h2 className="text-2xl font-semibold mb-4 text-black">Booking Code</h2>
-        <div className="flex flex-col sm:flex-row gap-3">
-          <input
-            type="text"
-            value={bookingCode}
-            onChange={(e) => {
-              setBookingCode(e.target.value);
-              setBookingCodeSaved(false);
-              setBookingCodeConfirmed(false);
-            }}
-            className="flex-1 border border-black rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-black"
-            aria-label="Booking code input"
-          />
+        <div className="relative z-10">
           <button
-            onClick={handleConfirmBookingCode}
-            className="bg-black text-white px-6 py-2 rounded-md hover:bg-gray-900 transition"
-            aria-label="Confirm booking code"
+            onClick={() => router.back()}
+            className="text-gray-400 hover:text-[#FFC107] hover:bg-white/5 mb-4 pl-0 flex items-center gap-2 text-sm font-medium transition-colors p-2 rounded-lg"
           >
-            Confirm Code
+            &larr; Back to bookings
           </button>
+
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+            <div>
+              <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-white mb-2">
+                Booking <span className="text-[#FFC107]">#{booking.booking_id.slice(0, 8)}</span>
+              </h1>
+              <p className="text-gray-400">
+                Manage details for {booking.store.client_name}
+              </p>
+            </div>
+            <div className="px-4 py-2 rounded-full bg-white/10 border border-white/10 backdrop-blur-md">
+              <span className="text-white text-sm font-mono tracking-wider">
+                {new Date(booking.created).toLocaleDateString()}
+              </span>
+            </div>
+          </div>
         </div>
-        {bookingCodeConfirmed && (
-          <p className="text-green-600 mt-2 font-semibold">Code confirmed ✅</p>
-        )}
-      </section>
+      </div>
 
-      {/* Editable Booking Section */}
-      {isInternal && (
-        <section className="bg-white bg-opacity-5 rounded-lg p-6 shadow-md mb-10">
-          <h2 className="text-2xl font-semibold mb-6 text-black">Edit Booking</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="flex flex-col">
-              <label
-                htmlFor="notes"
-                className="mb-1 font-medium text-black"
-              >
-                Notes
-              </label>
-              <textarea
-                id="notes"
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                className="border border-black rounded-md px-4 py-2 resize-y focus:outline-none focus:ring-2 focus:ring-black"
-                rows={4}
-              />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        {/* LEFT COLUMN: DETAILS */}
+        <div className="lg:col-span-2 space-y-6">
+
+          {/* Booking Info Card */}
+          <section className="bg-white rounded-3xl p-8 shadow-xl border border-gray-100">
+            <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
+              <span className="w-1 h-6 bg-[#FFC107] rounded-full"></span>
+              Client Information
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8">
+              <div className="space-y-1">
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Name</p>
+                <p className="font-semibold text-lg text-black">{booking.store.client_name}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Status</p>
+                <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide border ${booking.store.status === 'confirmed' ? 'bg-green-100 text-green-800 border-green-200' :
+                    booking.store.status === 'paid' ? 'bg-blue-100 text-blue-800 border-blue-200' :
+                      'bg-yellow-100 text-yellow-800 border-yellow-200'
+                  }`}>
+                  {booking.store.status}
+                </span>
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Email</p>
+                <p className="font-medium text-black">{booking.store.client_email}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Phone</p>
+                <p className="font-medium text-black">{booking.store.client_phone}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Total Amount</p>
+                <p className="font-bold text-2xl text-black">
+                  {booking.store.currency} {booking.store.amount}
+                </p>
+              </div>
             </div>
+          </section>
 
-            <div className="flex flex-col">
-              <label
-                htmlFor="status"
-                className="mb-1 font-medium text-black"
-              >
-                Status
-              </label>
-              <select
-                id="status"
-                value={status}
-                onChange={(e) => setStatus(e.target.value)}
-                className="border border-black rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-black"
-              >
-                <option value="pending">Pending</option>
-                <option value="paid">Paid</option>
-                <option value="confirmed">Confirmed</option>
-                <option value="completed">Completed</option>
-                <option value="rejected">Rejected</option>
-              </select>
-            </div>
+          {/* Edit Form */}
+          {isInternal && (
+            <section className="bg-white rounded-3xl p-8 shadow-xl border border-gray-100">
+              <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
+                <span className="w-1 h-6 bg-black rounded-full"></span>
+                Edit Details
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="flex flex-col space-y-2">
+                  <label htmlFor="notes" className="text-sm font-bold text-gray-700">Notes</label>
+                  <textarea
+                    id="notes"
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    className="border border-gray-200 rounded-xl px-4 py-3 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#FFC107] transition-all resize-none h-32"
+                  />
+                </div>
 
-            <div className="flex flex-col">
-              <label
-                htmlFor="amount"
-                className="mb-1 font-medium text-black"
-              >
-                Amount
-              </label>
+                <div className="space-y-4">
+                  <div className="flex flex-col space-y-2">
+                    <label htmlFor="status" className="text-sm font-bold text-gray-700">Status</label>
+                    <select
+                      id="status"
+                      value={status}
+                      onChange={(e) => setStatus(e.target.value)}
+                      className="border border-gray-200 rounded-xl px-4 py-3 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#FFC107] transition-all"
+                    >
+                      <option value="pending">Pending</option>
+                      <option value="paid">Paid</option>
+                      <option value="confirmed">Confirmed</option>
+                      <option value="completed">Completed</option>
+                      <option value="rejected">Rejected</option>
+                    </select>
+                  </div>
+                  <div className="flex flex-col space-y-2">
+                    <label htmlFor="amount" className="text-sm font-bold text-gray-700">Amount</label>
+                    <input
+                      id="amount"
+                      type="number"
+                      value={amount}
+                      onChange={(e) => setAmount(e.target.value)}
+                      className="border border-gray-200 rounded-xl px-4 py-3 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#FFC107] transition-all"
+                    />
+                  </div>
+                </div>
+
+                <div className="md:col-span-2 flex justify-end">
+                  <button
+                    onClick={handleSaveBooking}
+                    className="bg-black text-white px-8 py-4 rounded-xl font-bold shadow-lg hover:bg-[#FFC107] hover:text-black hover:shadow-[#FFC107]/20 transition-all duration-300"
+                  >
+                    Save Changes
+                  </button>
+                </div>
+              </div>
+            </section>
+          )}
+        </div>
+
+        {/* RIGHT COLUMN: ACTIONS */}
+        <div className="space-y-6">
+
+          {/* Code Verification */}
+          <section className="bg-[#0a0a0a] rounded-3xl p-8 shadow-xl text-white relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-[#FFC107] blur-[80px] opacity-20"></div>
+
+            <h2 className="text-xl font-bold mb-4 relative z-10">Verification</h2>
+            <p className="text-gray-400 text-sm mb-6 relative z-10">Enter the booking code provided by the client to verify this service.</p>
+
+            <div className="relative z-10 space-y-4">
               <input
-                id="amount"
-                type="number"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                className="border border-black rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-black"
-              />
-            </div>
-
-            <div className="flex flex-col">
-              <label
-                htmlFor="currency"
-                className="mb-1 font-medium text-black"
-              >
-                Currency
-              </label>
-              <input
-                id="currency"
                 type="text"
-                value={currency}
-                onChange={(e) => setCurrency(e.target.value)}
-                className="border border-black rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-black"
+                value={bookingCode}
+                placeholder="Enter 6-digit code"
+                onChange={(e) => {
+                  setBookingCode(e.target.value);
+                  setBookingCodeSaved(false);
+                  setBookingCodeConfirmed(false);
+                }}
+                className="w-full bg-white/10 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:bg-white/20 focus:border-[#FFC107] transition-all text-center tracking-widest font-mono text-lg"
               />
-            </div>
-
-            <div className="flex flex-col md:col-span-2">
-              <label
-                htmlFor="completedDate"
-                className="mb-1 font-medium text-black"
+              <button
+                onClick={handleConfirmBookingCode}
+                className="w-full bg-[#FFC107] text-black font-bold py-3 rounded-xl hover:bg-white hover:scale-[1.02] transition-all"
               >
-                Completed Date
-              </label>
-              <input
-                id="completedDate"
-                type="date"
-                value={completedDate}
-                onChange={(e) => setCompletedDate(e.target.value)}
-                className="border border-black rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-black"
-              />
+                Verify Code
+              </button>
             </div>
-          </div>
 
-          <button
-            onClick={handleSaveBooking}
-            className="mt-6 bg-black text-white px-8 py-3 rounded-md font-semibold shadow-md hover:bg-gray-900 transition"
-            aria-label="Save booking updates"
-          >
-            Save Booking Updates
-          </button>
-        </section>
-      )}
+            {bookingCodeConfirmed && (
+              <div className="mt-4 p-3 bg-green-500/20 border border-green-500/30 rounded-lg text-center">
+                <p className="text-green-400 font-bold text-sm">Code Verified Successfully</p>
+              </div>
+            )}
+          </section>
 
-      {/* Message */}
-      {message && (
-        <p
-          className={`mt-4 text-center font-semibold ${
-            message.includes("success")
-              ? "text-green-600"
-              : message.includes("confirmed")
-              ? "text-green-600"
-              : "text-red-600"
-          }`}
-          role="alert"
-        >
-          {message}
-        </p>
-      )}
+          {/* Status Message */}
+          {message && (
+            <div className={`p-4 rounded-2xl border ${message.includes("success") || message.includes("confirmed") ? "bg-green-50 border-green-100 text-green-700" : "bg-red-50 border-red-100 text-red-600"
+              } font-medium text-center text-sm shadow-sm`}>
+              {message}
+            </div>
+          )}
 
-      {/* Created Date */}
-      <p className="mt-10 text-center text-gray-600 text-sm">
-        Created: {new Date(booking.created).toLocaleString()}
-      </p>
+        </div>
+
+      </div>
+
     </div>
   );
 };

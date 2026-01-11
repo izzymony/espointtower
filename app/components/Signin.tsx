@@ -40,7 +40,7 @@ if(passcode.length < 6){
   return;
 } */
     try {
-      const checkUserUrl = `https://espoint.onrender.com/espoint/get_members_records/${username}/approved`
+      const checkUserUrl = `https://espoint-5shr.onrender.com/espoint/get_members_records/${username}/approved`
       const userRes = await axios.get(checkUserUrl)
 
       if (!userRes.data || !userRes.data.msg) {
@@ -80,7 +80,7 @@ if(passcode.length < 6){
  
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4 opacity-3">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4 ">
       <Card className="w-full max-w-md">
         <div className="mb-6">
         <Image

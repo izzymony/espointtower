@@ -1,5 +1,5 @@
 // servicesApi.ts - Refactored with proper types
-const BASE_URL = "https://espoint.onrender.com/espoint";
+const BASE_URL = "https://espoint-5shr.onrender.com/espoint";
 
 // ===== Interfaces =====
 export interface ServiceRole {

@@ -139,7 +139,7 @@ export default function SettingsPage() {
     }
   };
 
-  
+
   const handleEditMember = async () => {
     if (!editingMember) return;
     try {
@@ -186,176 +186,195 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="space-y-6 opacity-3">
-      {/* HEADER */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Settings</h1>
-          <p className="text-muted-foreground">Manage members and configure system settings.</p>
-        </div>
+    <div className="space-y-8 ">
+      {/* HERO HEADER - Implemented based on reference design */}
+      <div className="relative overflow-hidden rounded-3xl bg-[#0a0a0a] px-8 py-12 shadow-2xl">
+        {/* Abstract background elements to mimic the reference image glow */}
+        <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-primary/20 blur-3xl"></div>
+        <div className="absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-primary/10 blur-3xl"></div>
 
-        { role === "admin" && (
-          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" /> Add Member
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Add New Member</DialogTitle>
-                <DialogDescription>Create a new member account.</DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Name</Label>
-                  <Input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="passcode">Passcode</Label>
-                  <div className="relative">
-                    <Input
-                      id="passcode"
-                      type={showPasscode ? "text" : "password"}
-                      placeholder="Enter passcode"
-                      value={formData.passcode}
-                      onChange={(e) => setFormData((prev) => ({ ...prev, passcode: e.target.value }))}
-                      required
-                      maxLength={5}
-                      className="pr-20"
-                    />
-                    <div className="absolute right-1 top-1/2 -translate-y-1/2 flex gap-1">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 w-7 p-0"
-                        onClick={() => setShowPasscode(!showPasscode)}
-                      >
-                        {showPasscode ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 w-7 p-0"
-                        onClick={generateRandomPasscode}
-                        title="Generate random passcode"
-                      >
-                        <RefreshCw className="h-4 w-4" />
-                      </Button>
+        <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          <div className="space-y-2">
+            <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-white">
+              System <span className="text-primary">Settings</span>
+            </h1>
+            <p className="text-gray-400 max-w-lg text-lg">
+              Manage team members, permissions, and system configurations to empower your business operations.
+            </p>
+          </div>
+
+          {role === "admin" && (
+            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="h-12 px-8 rounded-full bg-primary text-black hover:bg-primary/90 font-bold text-base shadow-[0_0_20px_rgba(255,193,7,0.3)] transition-all hover:scale-105">
+                  <Plus className="mr-2 h-5 w-5" /> Add Member
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px] rounded-2xl border-border/50 shadow-2xl">
+                <DialogHeader>
+                  <DialogTitle className="text-2xl font-bold">Add New Member</DialogTitle>
+                  <DialogDescription>Create a new member account.</DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label>Name</Label>
+                    <Input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="border-border/60 rounded-xl bg-muted/20" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="passcode">Passcode</Label>
+                    <div className="relative">
+                      <Input
+                        id="passcode"
+                        type={showPasscode ? "text" : "password"}
+                        placeholder="Enter passcode"
+                        value={formData.passcode}
+                        onChange={(e) => setFormData((prev) => ({ ...prev, passcode: e.target.value }))}
+                        required
+                        maxLength={5}
+                        className="pr-20 border-border/60 rounded-xl bg-muted/20"
+                      />
+                      <div className="absolute right-1 top-1/2 -translate-y-1/2 flex gap-1">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 hover:bg-primary/10 hover:text-primary rounded-lg"
+                          onClick={() => setShowPasscode(!showPasscode)}
+                        >
+                          {showPasscode ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 hover:bg-primary/10 hover:text-primary rounded-lg"
+                          onClick={generateRandomPasscode}
+                          title="Generate random passcode"
+                        >
+                          <RefreshCw className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
+                  <div className="space-y-2">
+                    <Label>Labels</Label>
+                    <Select
+                      value={formData.labels}
+                      onValueChange={(value: Member["labels"]) => setFormData({ ...formData, labels: value })}
+                    >
+                      <SelectTrigger className="border-border/60 rounded-xl bg-muted/20">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {LABELS.map((label) => (
+                          <SelectItem key={label.value} value={label.value}>
+                            {label.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Status</Label>
+                    <Select
+                      value={formData.status}
+                      onValueChange={(value: Member["status"]) => setFormData({ ...formData, status: value })}
+                    >
+                      <SelectTrigger className="border-border/60 rounded-xl bg-muted/20">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="approved">Approved</SelectItem>
+                        <SelectItem value="suspended">Suspended</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label>Labels</Label>
-                  <Select
-                    value={formData.labels}
-                    onValueChange={(value: Member["labels"]) => setFormData({ ...formData, labels: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {LABELS.map((label) => (
-                        <SelectItem key={label.value} value={label.value}>
-                          {label.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Status</Label>
-                  <Select
-                    value={formData.status}
-                    onValueChange={(value: Member["status"]) => setFormData({ ...formData, status: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="approved">Approved</SelectItem>
-                      <SelectItem value="suspended">Suspended</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button onClick={handleAddMember}>Add Member</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        )}
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setIsAddDialogOpen(false)} className="rounded-full border-border">
+                    Cancel
+                  </Button>
+                  <Button onClick={handleAddMember} className="bg-primary text-black hover:bg-primary/90 font-bold rounded-full px-6">Add Member</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          )}
+        </div>
       </div>
 
       {/* MEMBERS TABLE */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Members</CardTitle>
-          <CardDescription>List of members and who added them.</CardDescription>
-          <div className="flex gap-2">
-            <label>Status:</label>
-            <Select value={filterStatus} onValueChange={(value: Member["status"]) => setFilterStatus(value)}>
-              <SelectTrigger className="w-[150px]">
-                <SelectValue placeholder="Select status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="approved">Approved</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="suspended">Suspended</SelectItem>
-              </SelectContent>
-            </Select>
+      <Card className="border-none shadow-xl bg-card/50 backdrop-blur-sm rounded-3xl overflow-hidden ring-1 ring-border/10">
+        <CardHeader className="bg-white border-b border-border/10 pb-6 pt-6 px-8">
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <CardTitle className="text-xl font-bold flex items-center gap-2">
+                <div className="h-8 w-1 bg-primary rounded-full"></div>
+                Members List
+              </CardTitle>
+            </div>
+            <div className="flex items-center gap-3 bg-muted/30 p-1 rounded-full border border-border/20">
+              <label className="text-sm font-medium text-muted-foreground pl-3">Filter:</label>
+              <Select value={filterStatus} onValueChange={(value: Member["status"]) => setFilterStatus(value)}>
+                <SelectTrigger className="w-[140px] bg-white border-0 shadow-sm rounded-full h-8 text-xs font-medium">
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="approved">Approved</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="suspended">Suspended</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           {loading ? (
-            <p>Loading members...</p>
+            <div className="p-12 text-center">
+              <RefreshCw className="h-8 w-8 animate-spin mx-auto text-primary mb-2" />
+              <p className="text-muted-foreground">Loading members...</p>
+            </div>
           ) : error ? (
-            <p className="text-red-500">{error}</p>
+            <div className="p-12 text-center text-destructive bg-destructive/5 m-4 rounded-2xl">{error}</div>
           ) : (
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Added By</TableHead>
-                  <TableHead>Labels</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Created on</TableHead>
-                  {role === "admin" && <TableHead>Actions</TableHead>}
+                <TableRow className="hover:bg-transparent border-border/20 bg-muted/5">
+                  <TableHead className="font-bold text-foreground pl-8 h-12">Name</TableHead>
+                  <TableHead className="font-bold text-foreground h-12">Added By</TableHead>
+                  <TableHead className="font-bold text-foreground h-12">Labels</TableHead>
+                  <TableHead className="font-bold text-foreground h-12">Status</TableHead>
+                  <TableHead className="font-bold text-foreground h-12">Created on</TableHead>
+                  {role === "admin" && <TableHead className="font-bold text-foreground text-right pr-8 h-12">Actions</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {members.filter((m) => filterStatus === "approved" || m.status === filterStatus).length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={role === "admin" ? 6 : 5} className="text-center">
-                      No members found.
+                    <TableCell colSpan={role === "admin" ? 6 : 5} className="text-center py-12 text-muted-foreground">
+                      No members found matching filter.
                     </TableCell>
                   </TableRow>
                 ) : (
                   members
                     .filter((m) => filterStatus === "approved" || m.status === filterStatus)
                     .map((m, idx) => (
-                      <TableRow key={idx}>
-                        <TableCell>{m.name}</TableCell>
-                        <TableCell>{m.addedBy || "-"}</TableCell>
-                        <TableCell>
-                          <Badge>{m.labels}</Badge>
+                      <TableRow key={idx} className="hover:bg-primary/5 border-border/20 transition-colors">
+                        <TableCell className="font-semibold pl-8 py-4">{m.name}</TableCell>
+                        <TableCell className="text-muted-foreground py-4">{m.addedBy || "-"}</TableCell>
+                        <TableCell className="py-4">
+                          <Badge variant="outline" className="font-medium bg-white text-foreground border-border/40 px-3 py-1 rounded-full uppercase text-[10px] tracking-wider">{m.labels}</Badge>
                         </TableCell>
-                        <TableCell>
-                          <Badge className={getStatusColor(m.status)}>{m.status}</Badge>
+                        <TableCell className="py-4">
+                          <Badge className={`${getStatusColor(m.status)} font-bold shadow-none border-0 px-3 py-1 rounded-full uppercase text-[10px] tracking-wider`}>{m.status}</Badge>
                         </TableCell>
-                        <TableCell>{m.createdAt}</TableCell>
+                        <TableCell className="text-muted-foreground text-sm py-4">{m.createdAt}</TableCell>
                         {role === "admin" && (
-                          <TableCell className="flex gap-2">
-                            <Button size="sm" variant="outline" onClick={() => openEditDialog(m)}>
+                          <TableCell className="flex justify-end gap-2 pr-8 py-4">
+                            <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full hover:bg-primary/10 hover:text-primary transition-colors" onClick={() => openEditDialog(m)}>
                               <Edit className="h-4 w-4" />
                             </Button>
-                            <Button size="sm" variant="outline" onClick={() => handleDeleteMember(m.name)}>
+                            <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full hover:bg-destructive/10 hover:text-destructive transition-colors" onClick={() => handleDeleteMember(m.name)}>
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </TableCell>
