@@ -42,7 +42,7 @@ export default function DashboardLayout({
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 px-4 transition-all ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12 bg-[#0a0a0a] border-b border-white/5 sticky top-0 z-10">
+        <header className="flex h-16 shrink-0 items-center gap-2 px-4 transition-all ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12 bg-[#0a0a0a] border-b border-white/5 sticky top-0 z-50">
           <SidebarTrigger className="-ml-1 text-[#FFC107] hover:bg-white/10 hover:text-[#FFC107]" />
           <div className="flex-1" />
         </header>

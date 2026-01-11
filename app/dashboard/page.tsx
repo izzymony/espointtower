@@ -122,10 +122,10 @@ export default function DashboardPage() {
           {membersCount.map((service) => (
             <Card
               key={service.service_id}
-              className="group relative border-none shadow-xl rounded-[2.5rem] bg-[#0a0a0a] text-white p-6 overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-1"
+              className="group relative  border-none shadow-xl rounded-[2.5rem] bg-[#0a0a0a] text-white p-6 overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-1"
             >
               {/* Abstract Glow */}
-              <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-white/5 rounded-full blur-3xl transition-all group-hover:bg-[#FFC107]/10"></div>
+              <div className="absolute bottom-10 -left-10 w-32 h-32 bg-white/5 rounded-full blur-3xl transition-all group-hover:bg-[#FFC107]/10"></div>
 
               <CardHeader className="p-0 relative z-10">
                 <div className="flex justify-between items-start mb-4">
