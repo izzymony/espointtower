@@ -63,8 +63,40 @@ const BookingCounts = () => {
       if (!res.ok) throw new Error("Failed to fetch booking counts");
 
       const resData = await res.json();
-      if (resData.msg) {
-        setData(resData.msg);
+      if (resData.msg && typeof resData.msg === "object") {
+        // The API returns { [date]: { [status]: { [serviceId]: count } } }
+        // We need to aggregate this into { [serviceId]: { [status]: count } }
+        const aggregated: CountResponse = {};
+
+        Object.values(resData.msg).forEach((dateData: any) => {
+          if (dateData && typeof dateData === "object") {
+            Object.entries(dateData).forEach(([status, services]: [string, any]) => {
+              if (services && typeof services === "object") {
+                Object.entries(services).forEach(([serviceId, count]: [string, any]) => {
+                  if (!aggregated[serviceId]) {
+                    aggregated[serviceId] = { confirmed: 0, pending: 0, cancelled: 0 };
+                  }
+
+                  const normalizedStatus = status.toLowerCase();
+                  const value = typeof count === "number" ? count : 0;
+
+                  if (normalizedStatus === "confirmed") {
+                    aggregated[serviceId].confirmed = (aggregated[serviceId].confirmed || 0) + value;
+                  } else if (normalizedStatus === "pending") {
+                    aggregated[serviceId].pending = (aggregated[serviceId].pending || 0) + value;
+                  } else if (normalizedStatus === "cancelled") {
+                    aggregated[serviceId].cancelled = (aggregated[serviceId].cancelled || 0) + value;
+                  } else {
+                    // Handle other statuses if they exist
+                    aggregated[serviceId][status] = (aggregated[serviceId][status] || 0) + value;
+                  }
+                });
+              }
+            });
+          }
+        });
+
+        setData(aggregated);
       } else {
         setData({});
       }

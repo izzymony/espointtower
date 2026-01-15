@@ -21,6 +21,7 @@ export default function RootLayout({
     <html lang="en">
       <body
         className={`${outfit.variable} antialiased bg-background text-foreground`}
+        suppressHydrationWarning
       >
         <main className="min-h-screen">
           {children}
