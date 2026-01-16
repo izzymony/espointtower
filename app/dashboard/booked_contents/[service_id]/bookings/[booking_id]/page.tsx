@@ -133,7 +133,7 @@ const Page = () => {
       };
 
       const res = await fetch(
-        `https://espoint.onrender.com/espoint/create_booking`,
+        `https://espoint-5shr.onrender.com/espoint/create_booking`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -167,7 +167,7 @@ const Page = () => {
         return;
       }
 
-      const confirmUrl = `https://espoint.onrender.com/espoint/confirm_booking_code/${storedUser.username}/${booking.booking_id}/${bookingCode}`;
+      const confirmUrl = `https://espoint-5shr.onrender.com/espoint/confirm_booking_code/${storedUser.username}/${booking.booking_id}/${bookingCode}`;
       const confirmRes = await fetch(confirmUrl, { method: "GET" });
       if (!confirmRes.ok) throw new Error("Failed to confirm booking code");
       const confirmResult = await confirmRes.json();
