@@ -24,10 +24,7 @@ export default function SignInPage() {
   const [error, setError] = useState("")
   const router = useRouter()
 
-  const generateRandomPasscode = () => {
-    const randomPasscode = Math.random().toString(36).substring(2, 10).toUpperCase()
-    setPasscode(randomPasscode)
-  }
+  
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -124,25 +121,8 @@ if(passcode.length < 6){
                   className="pr-20"
                 />
                 <div className="absolute right-1 top-1/2 -translate-y-1/2 flex gap-1">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="h-7 w-7 p-0"
-                    onClick={() => setShowPasscode(!showPasscode)}
-                  >
-                    {showPasscode ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="h-7 w-7 p-0"
-                    onClick={generateRandomPasscode}
-                    title="Generate random passcode"
-                  >
-                    <RefreshCw className="h-4 w-4" />
-                  </Button>
+                 
+                 
                 </div>
               </div>
             </div>

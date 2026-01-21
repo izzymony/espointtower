@@ -80,7 +80,7 @@ const Page = () => {
           setAmount(bookingData.store.amount || "");
           setCurrency(bookingData.store.currency || "");
           setCompletedDate(bookingData.store.completed_date || "");
-          setBookingCode(bookingData.store.booking_code || "");
+          setBookingCode("");
           setBookingCodeSaved(!!bookingData.store.booking_code);
           setBookingCodeConfirmed(false);
 
@@ -114,7 +114,7 @@ const Page = () => {
         service_id: booking.service_id || "",
         booking_id: booking.booking_id,
         username: storedUser.username,
-        from: "external",
+        from: "internal",
         data: {
           client_email: booking.store.client_email,
           preferred_staff_id: booking.store.preferred_staff_id,
@@ -167,17 +167,19 @@ const Page = () => {
         return;
       }
 
-      const confirmUrl = `https://espoint-5shr.onrender.com/espoint/confirm_booking_code/${storedUser.username}/${booking.booking_id}/${bookingCode}`;
+      const confirmUrl = `https://espoint-5shr.onrender.com/espoint/confirm_booking_code/${storedUser.username}/${booking.booking_id}/${bookingCode.trim()}`;
       const confirmRes = await fetch(confirmUrl, { method: "GET" });
       if (!confirmRes.ok) throw new Error("Failed to confirm booking code");
       const confirmResult = await confirmRes.json();
 
-      if (confirmResult.msg === true) {
+      console.log("Confirmation verification result:", confirmResult);
+
+      if (confirmResult.msg === true || confirmResult.msg === "true") {
         setBookingCodeConfirmed(true);
         setMessage("Booking code confirmed ✅");
       } else {
         setBookingCodeConfirmed(false);
-        setMessage("Booking code confirmation failed ❌");
+        setMessage(`Booking code confirmation failed: ${JSON.stringify(confirmResult.msg || "Invalid code")} ❌`);
       }
     } catch (err: unknown) {
       const msg =
@@ -263,8 +265,8 @@ const Page = () => {
               <div className="space-y-1">
                 <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Status</p>
                 <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide border ${booking.store.status === 'confirmed' ? 'bg-green-100 text-green-800 border-green-200' :
-                    booking.store.status === 'paid' ? 'bg-blue-100 text-blue-800 border-blue-200' :
-                      'bg-yellow-100 text-yellow-800 border-yellow-200'
+                  booking.store.status === 'paid' ? 'bg-blue-100 text-blue-800 border-blue-200' :
+                    'bg-yellow-100 text-yellow-800 border-yellow-200'
                   }`}>
                   {booking.store.status}
                 </span>
@@ -359,7 +361,7 @@ const Page = () => {
               <input
                 type="text"
                 value={bookingCode}
-                placeholder="Enter 6-digit code"
+                placeholder="Enter booking code to verify"
                 onChange={(e) => {
                   setBookingCode(e.target.value);
                   setBookingCodeSaved(false);

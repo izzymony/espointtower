@@ -96,7 +96,7 @@ const BookingAmounts = () => {
         referenceDateStr = `${year}-01-01`;
       }
 
-      const url = `https://espoint.onrender.com/espoint/cal_b_amount/${username}/${serviceUnit}/${mode}/${referenceDateStr}/${startStr}/${endStr}`;
+      const url = `https://espoint-5shr.onrender.com/espoint/cal_b_amount/${username}/${serviceUnit}/${mode}/${referenceDateStr}/${startStr}/${endStr}`;
 
       const res = await fetch(url);
       if (!res.ok) throw new Error(`Failed to fetch amounts: ${res.statusText}`);
