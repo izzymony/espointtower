@@ -70,8 +70,7 @@ const ContentDetails = () => {
 
   const { store } = content;
   const itemQuantity = store.rental_items?.[1]?.quantity || 0;
-  const totalPrice = itemQuantity * (store.base_price || 0);
-  
+
   const images = store.branding?.logo_url?.length > 0 ? store.branding.logo_url : ['/camera-431119_1280.jpg'];
 
   const nextImage = () => {
@@ -114,31 +113,31 @@ const ContentDetails = () => {
                 priority
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
-              
+
               {/* Navigation Arrows (Only show if multiple images) */}
               {images.length > 1 && (
                 <>
-                  <button 
+                  <button
                     onClick={prevImage}
                     className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white p-3 rounded-full backdrop-blur-sm transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100 z-10"
                   >
                     <ChevronLeft className="w-6 h-6" />
                   </button>
-                  <button 
+                  <button
                     onClick={nextImage}
                     className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white p-3 rounded-full backdrop-blur-sm transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100 z-10"
                   >
                     <ChevronRight className="w-6 h-6" />
                   </button>
-                   {/* Pagination Dots */}
-                   <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-10">
-                     {images.map((_, idx) => (
-                       <div 
-                         key={idx} 
-                         className={`h-2 rounded-full transition-all shadow-sm ${idx === currentImageIndex ? 'w-8 bg-white' : 'w-2 bg-white/50'}`} 
-                       />
-                     ))}
-                   </div>
+                  {/* Pagination Dots */}
+                  <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-10">
+                    {images.map((_, idx) => (
+                      <div
+                        key={idx}
+                        className={`h-2 rounded-full transition-all shadow-sm ${idx === currentImageIndex ? 'w-8 bg-white' : 'w-2 bg-white/50'}`}
+                      />
+                    ))}
+                  </div>
                 </>
               )}
             </div>
@@ -212,7 +211,7 @@ const ContentDetails = () => {
               <div className="space-y-4">
                 <div className="flex justify-between items-center text-gray-400">
                   <span>Base Price</span>
-                  <span>₦{store.base_price?.toLocaleString()}</span>
+                  <span>SL{store.base_price?.toLocaleString()}</span>
                 </div>
                 {itemQuantity > 0 && (
                   <div className="flex justify-between items-center text-gray-400">
@@ -222,12 +221,7 @@ const ContentDetails = () => {
                 )}
               </div>
 
-              <div className="h-px bg-white/10 my-4"></div>
 
-              <div className="flex justify-between items-end">
-                <span className="text-gray-400 mb-1">Total Value</span>
-                <span className="text-4xl font-bold text-primary">₦{totalPrice.toLocaleString()}</span>
-              </div>
             </CardContent>
           </Card>
 

@@ -122,7 +122,7 @@ const ContentCard = ({ content, service_id }: { content: ServiceContent; service
               ACQUISITION TIER
             </span>
             <span className="text-3xl font-black text-[#0a0a0a] tracking-tight">
-              &#8358; {store.base_price.toLocaleString()}
+              SL{store.base_price.toLocaleString()}
             </span>
           </div>
 

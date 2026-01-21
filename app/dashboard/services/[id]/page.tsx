@@ -578,7 +578,7 @@ const ServiceDetailPage = () => {
                 onClick={() => setShowAddStaff(true)}
                 className="bg-[#FFC107] hover:bg-[#FFC107]/90 text-[#0a0a0a] border-none font-bold rounded-xl px-4 h-10 transition-transform active:scale-95 shadow-lg shadow-[#FFC107]/10"
               >
-                + Deploy Staff
+                + Add Staff
               </Button>
             </CardHeader>
 
@@ -637,7 +637,7 @@ const ServiceDetailPage = () => {
                             </div>
                           ))
                         ) : (
-                          <span className="text-xs italic text-gray-500">No clearance levels assigned</span>
+                          <span className="text-xs italic text-gray-500">No staff assigned</span>
                         )}
                       </div>
                     </div>
@@ -670,16 +670,9 @@ const ServiceDetailPage = () => {
                 className="w-full h-14 rounded-2xl bg-white/5 border-white/10 text-white font-bold hover:bg-white/10 hover:border-[#FFC107]/50 transition-all text-base gap-3"
                 onClick={() => setShowEditService(true)}
               >
-                Modify Unit Parameters
+                Edit Unit Parameters
               </Button>
-              <div className="grid grid-cols-2 gap-3">
-                <Button variant="outline" className="h-14 rounded-2xl bg-white/5 border-white/10 text-gray-300 font-bold hover:bg-white/10 transition-all text-sm">
-                  Export Log
-                </Button>
-                <Button variant="outline" className="h-14 rounded-2xl bg-white/5 border-white/10 text-gray-300 font-bold hover:bg-white/10 transition-all text-sm">
-                  Contact Team
-                </Button>
-              </div>
+            
               <Button
                 variant="outline"
                 className="w-full h-14 rounded-2xl bg-red-500/5 border-red-500/20 text-red-500 font-bold hover:bg-red-500/10 hover:border-red-500/50 transition-all text-base mt-4"
@@ -689,7 +682,7 @@ const ServiceDetailPage = () => {
                   }
                 }}
               >
-                Decommission Unit
+                Delete Unit
               </Button>
             </CardContent>
           </Card>
