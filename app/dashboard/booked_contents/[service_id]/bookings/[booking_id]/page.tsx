@@ -29,7 +29,7 @@ interface Booking {
 }
 
 const Page = () => {
-  const { booking_id } = useParams() as { booking_id: string };
+  const { booking_id, service_id } = useParams() as { booking_id: string; service_id: string };
   const [booking, setBooking] = useState<Booking | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -111,7 +111,7 @@ const Page = () => {
       }
 
       const payload = {
-        service_id: booking.service_id || "",
+        service_id: booking.service_id || service_id || "",
         booking_id: booking.booking_id,
         username: storedUser.username,
         from: "internal",
@@ -329,6 +329,16 @@ const Page = () => {
                       type="number"
                       value={amount}
                       onChange={(e) => setAmount(e.target.value)}
+                      className="border border-gray-200 rounded-xl px-4 py-3 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#FFC107] transition-all"
+                    />
+                  </div>
+                  <div className="flex flex-col space-y-2">
+                    <label htmlFor="completedDate" className="text-sm font-bold text-gray-700">Completed Date</label>
+                    <input
+                      id="completedDate"
+                      type="date"
+                      value={completedDate}
+                      onChange={(e) => setCompletedDate(e.target.value)}
                       className="border border-gray-200 rounded-xl px-4 py-3 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#FFC107] transition-all"
                     />
                   </div>
