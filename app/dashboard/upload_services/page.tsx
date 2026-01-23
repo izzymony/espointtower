@@ -239,10 +239,10 @@ function ServiceForm() {
   };
 
   const statusConfig = {
-    approved: { label: "Approved", variant: "default" as const },
+        active: { label: "Active", variant: "default" as const },
     pending: { label: "Pending", variant: "secondary" as const },
-    suspended: { label: "Suspended", variant: "destructive" as const },
-    active: { label: "Active", variant: "outline" as const }, // changed from "success"
+    suspended: { label: "Suspended", variant: "destructive" as const }, 
+     approved: { label: "Approved", variant: "outline" as const },// changed from "success"
   };
 
   return (
