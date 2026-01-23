@@ -4,9 +4,11 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Loader from '@/app/components/Loading';
 import Image from 'next/image';
-import { Clock2, Tag, Info, Box, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Clock2, Tag, Info, Box, ChevronLeft, ChevronRight, Edit } from 'lucide-react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { useRouter } from 'next/navigation';
 
 interface ServiceStore {
   branding: { logo_url: string[] };
@@ -33,7 +35,9 @@ interface ServiceContent {
 
 const ContentDetails = () => {
   const params = useParams();
+  const router = useRouter();
   const content_id = params?.contentid as string;
+  const service_id = params?.serviceid as string;
 
   const [content, setContent] = useState<ServiceContent | null>(null);
   const [loading, setLoading] = useState(false);
@@ -88,14 +92,23 @@ const ContentDetails = () => {
         <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-primary/20 blur-3xl"></div>
         <div className="absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-primary/10 blur-3xl"></div>
 
-        <div className="relative z-10 space-y-2">
-          <Badge variant="outline" className="text-primary border-primary/20 mb-2">{store.category || 'Service'}</Badge>
-          <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-white">
-            {store.name}
-          </h1>
-          <p className="text-gray-400 max-w-lg text-lg line-clamp-2">
-            {store.description}
-          </p>
+        <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+          <div className="space-y-2">
+            <Badge variant="outline" className="text-primary border-primary/20 mb-2">{store.category || 'Service'}</Badge>
+            <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-white">
+              {store.name}
+            </h1>
+            <p className="text-gray-400 max-w-lg text-lg line-clamp-2">
+              {store.description}
+            </p>
+          </div>
+          <Button
+            onClick={() => router.push(`/dashboard/upload_services?service_id=${service_id}&content_id=${content_id}`)}
+            className="bg-primary text-black font-bold h-14 px-8 rounded-2xl flex items-center gap-2 shadow-lg hover:bg-primary/90 transition-all transform hover:scale-105"
+          >
+            <Edit className="w-5 h-5" />
+            Edit Content
+          </Button>
         </div>
       </div>
 

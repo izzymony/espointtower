@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { ServicesAPI, CreateServiceContentPayload, Service } from "@/utils/servicesApi";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -9,10 +9,19 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, Plus, Clock, Image as ImageIcon, Tag, Percent, Clock as ClockIcon } from "lucide-react";
+import { Trash2, Plus, Clock, Image as ImageIcon, Tag, Percent, Clock as ClockIcon, ArrowLeft } from "lucide-react";
 import Image from "next/image";
+import { useSearchParams, useRouter } from "next/navigation";
 
-export default function ServiceForm() {
+export default function ServicePage() {
+  return (
+    <Suspense fallback={<div>Loading form...</div>}>
+      <ServiceForm />
+    </Suspense>
+  );
+}
+
+function ServiceForm() {
   const [services, setServices] = useState<Service[]>([]);
   const [selectedService, setSelectedService] = useState("");
   const [createdBy, setCreatedBy] = useState("Admin User");
@@ -28,10 +37,17 @@ export default function ServiceForm() {
   const [discountPercent, setDiscountPercent] = useState("");
   const [durationMinutes, setDurationMinutes] = useState("");
   const [name, setName] = useState("");
+  const [serviceNameFromContent, setServiceNameFromContent] = useState("");
   const [status, setStatus] = useState("approved");
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const queryServiceId = searchParams.get("service_id");
+  const queryContentId = searchParams.get("content_id");
+  const isEditMode = !!queryContentId;
 
   const fileToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -49,19 +65,76 @@ export default function ServiceForm() {
     }
 
     const fetchServices = async () => {
-      setLoading(true);
       try {
         const data = await ServicesAPI.getAllService();
         setServices(data);
       } catch (error) {
         console.error("Error fetching services:", error);
-      } finally {
-        setLoading(false);
       }
     };
 
     fetchServices();
   }, []);
+
+  useEffect(() => {
+    const fetchContent = async () => {
+      if (!queryContentId) {
+        if (queryServiceId) setSelectedService(queryServiceId);
+        return;
+      }
+
+      console.log("Edit Mode Detected. Content ID:", queryContentId);
+      setLoading(true);
+      try {
+        const contentData = await ServicesAPI.getContent(queryContentId) as any;
+        console.log("Fetched Content Data Raw:", contentData);
+
+        if (contentData && contentData.msg) {
+          const content = contentData.msg;
+          // Robust store data extraction: check 'store', 'data', or the object itself
+          const store = content.store || content.data || (content.branding ? content : null);
+
+          if (!store) {
+            console.error("Could not find store data in content message:", content);
+            return;
+          }
+
+          console.log("Extracted Store Data:", store);
+
+          setSelectedService(content.service_id || content.service_unit || "");
+          setServiceNameFromContent(content.service || "");
+          setName(store.name || "");
+          setDescription(store.description || "");
+          setLogoUrls(store.branding?.logo_url || []);
+          setHoursStart(store.service_hours?.start || "");
+          setHoursEnd(store.service_hours?.end || "");
+          setBasePrice(store.base_price?.toString() || "");
+          setCategory(store.category || "");
+          setDiscountPercent(store.discount_percent?.toString() || "");
+          setDurationMinutes(store.duration_minutes?.toString() || "");
+          setStatus(store.status || "active");
+
+          if (store.rental_items) {
+            // Handle both array and object structures for rental_items
+            const items = Object.values(store.rental_items).map((ri: any) => ({
+              item: ri.item || "",
+              quantity: ri.quantity?.toString() || "",
+              duration_hours: ri.duration_hours?.toString() || ""
+            }));
+            setRentalItems(items.length > 0 ? items : [{ item: "", quantity: "", duration_hours: "" }]);
+          }
+        } else {
+          console.warn("API returned no msg for content_id:", queryContentId);
+        }
+      } catch (error) {
+        console.error("Error fetching content details:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchContent();
+  }, [queryContentId, queryServiceId]);
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -112,18 +185,21 @@ export default function ServiceForm() {
       const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
       const serviceObj = services.find((s) => s.id === selectedService);
 
-      // Convert files to base64
+      // Process logos: Keep existing ones that are still in logoUrls, and convert new files
       const base64Logos = await Promise.all(selectedFiles.map(fileToBase64));
+      const existingLogos = logoUrls.filter(url => !url.startsWith('blob:')); // Filter out blob URLs
+      const finalLogos = [...existingLogos, ...base64Logos];
 
       const payload: CreateServiceContentPayload = {
+        ...(isEditMode && queryContentId ? { content_id: queryContentId } : {}),
         created_by: createdBy,
-        service: serviceObj?.name || "",
+        service: serviceObj?.name || serviceNameFromContent || "",
         service_id: selectedService,
         service_unit: selectedService, // Using service ID (UUID) as unit
         username: storedUser.username || "guest",
         data: {
           branding: {
-            logo_url: base64Logos,
+            logo_url: finalLogos,
           },
           eligible_roles: "all", // Default or add selection
           service_hours: {
@@ -146,9 +222,14 @@ export default function ServiceForm() {
         },
       };
 
-      await ServicesAPI.createServiceContent(payload);
-      alert("Service saved successfully!");
-      // Reset form or redirect
+      if (isEditMode && queryContentId) {
+        await ServicesAPI.updateServiceContent(payload);
+        alert("Service updated successfully!");
+      } else {
+        await ServicesAPI.createServiceContent(payload);
+        alert("Service saved successfully!");
+      }
+      router.back();
     } catch (error) {
       console.error("Error submitting form:", error);
       alert("Failed to save service. Please try again.");
@@ -172,13 +253,27 @@ export default function ServiceForm() {
         <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-primary/20 blur-3xl"></div>
         <div className="absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-primary/10 blur-3xl"></div>
 
-        <div className="relative z-10 space-y-2">
-          <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-white">
-            Create <span className="text-primary">Service</span>
-          </h1>
-          <p className="text-gray-400 max-w-lg text-lg">
-            Add new service offerings to your portfolio with comprehensive details and pricing.
-          </p>
+        <div className="relative z-10 flex justify-between items-center">
+          <div className="space-y-2">
+            <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-white">
+              {isEditMode ? "Update" : "Create"} <span className="text-primary">Service</span>
+            </h1>
+            <p className="text-gray-400 max-w-lg text-lg">
+              {isEditMode
+                ? "Modify your existing service details and pricing information."
+                : "Add new service offerings to your portfolio with comprehensive details and pricing."}
+            </p>
+          </div>
+          {isEditMode && (
+            <Button
+              variant="ghost"
+              onClick={() => router.back()}
+              className="text-white hover:bg-white/10 rounded-full h-12 px-6 flex items-center gap-2"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              Back
+            </Button>
+          )}
         </div>
       </div>
 
@@ -474,7 +569,7 @@ export default function ServiceForm() {
                 disabled={submitting}
                 className="bg-primary text-black font-bold text-lg px-10 py-6 rounded-full hover:bg-primary/90 shadow-[0_0_25px_rgba(255,193,7,0.4)] transition-all transform hover:scale-105"
               >
-                {submitting ? "Saving..." : "Save Service"}
+                {submitting ? "Saving..." : (isEditMode ? "Update Service" : "Save Service")}
               </Button>
             </div>
 
