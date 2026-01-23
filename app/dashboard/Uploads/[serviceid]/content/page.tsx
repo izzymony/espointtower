@@ -5,7 +5,7 @@ import Loader from '@/app/components/Loading';
 
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { Heart, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Heart, ArrowRight, ChevronLeft, ChevronRight, Edit } from 'lucide-react';
 
 interface ServiceStore {
   branding: {
@@ -126,12 +126,22 @@ const ContentCard = ({ content, service_id }: { content: ServiceContent; service
             </span>
           </div>
 
-          <button
-            onClick={() => router.push(`/dashboard/Uploads/${service_id}/content/${content.content_id}`)}
-            className="flex items-center gap-2 bg-[#0a1120] text-white py-3 px-6 rounded-full font-bold text-sm tracking-widest uppercase hover:bg-primary hover:text-black transition-colors duration-300 shadow-lg group-hover:shadow-primary/25"
-          >
-            ENTER <ArrowRight className="w-4 h-4 ml-1" />
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => router.push(`/dashboard/upload_services?service_id=${service_id}&content_id=${content.content_id}`)}
+              className="flex items-center gap-2 bg-primary/10 text-primary py-3 px-5 rounded-full font-bold text-sm tracking-widest uppercase hover:bg-primary hover:text-black transition-colors duration-300 shadow-sm"
+              title="Edit Content"
+            >
+              <Edit className="w-4 h-4" />
+            </button>
+
+            <button
+              onClick={() => router.push(`/dashboard/Uploads/${service_id}/content/${content.content_id}`)}
+              className="flex items-center gap-2 bg-[#0a1120] text-white py-3 px-6 rounded-full font-bold text-sm tracking-widest uppercase hover:bg-primary hover:text-black transition-colors duration-300 shadow-lg group-hover:shadow-primary/25"
+            >
+              ENTER <ArrowRight className="w-4 h-4 ml-1" />
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -148,7 +158,7 @@ export default function ContentService() {
   useEffect(() => {
     if (!service_id) return;
 
-    const url = `https://espoint-5shr.onrender.com/espoint/get_all_content_based_service_and_status/${service_id}/approved`;
+    const url = `https://espoint-5shr.onrender.com/espoint/get_all_content_based_service_and_status/${service_id}/active`;
     console.log("Fetching URL:", url);
 
     setLoading(true);
@@ -192,7 +202,7 @@ export default function ContentService() {
         </div>
       </div>
 
-      <div className="grid gap-8 grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+      <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
         {serviceContent.map((content) => (
           <ContentCard key={content.content_id} content={content} service_id={service_id} />
         ))}

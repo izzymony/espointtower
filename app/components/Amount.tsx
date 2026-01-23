@@ -243,7 +243,7 @@ const BookingAmounts = () => {
                           <span className="text-sm font-bold uppercase tracking-wide opacity-90">{config.label}</span>
                         </div>
                         <div className="text-lg font-black tracking-tight">
-                          <span className="text-[10px] align-top opacity-50 mr-0.5">₦</span>
+                          <span className="text-[10px] align-top opacity-50 mr-0.5">SL</span>
                           {Number(amount).toLocaleString()}
                         </div>
                       </div>

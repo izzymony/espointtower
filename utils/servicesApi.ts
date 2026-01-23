@@ -18,7 +18,7 @@ export interface ServiceStaff {
 export interface ServiceMember {
   memberId: string;
   memberName: string;
-  status?: string;  roles: string[];
+  status?: string; roles: string[];
 }
 
 export interface ServiceStore {
@@ -137,6 +137,7 @@ export interface CreatePaymentPayload {
 }
 
 export interface CreateServiceContentPayload {
+  content_id?: string;
   created_by: string;
   service: string;
   service_id: string;
@@ -185,7 +186,7 @@ export interface CreateBookingPayload {
   service: string;
 }
 
-export interface CreateBookingRequest{
+export interface CreateBookingRequest {
   service: string;
   service_unit: string;
   username: string;
@@ -206,10 +207,10 @@ async function apiRequest<T>(
   body?: object
 ): Promise<T> {
   const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
-  const token = storedUser?.token || storedUser?.accessToken; 
-  const headers: HeadersInit = { 
-    "Content-Type": "application/json", 
-    ...(token ? { Authorization: `Bearer ${token}` } : {}) 
+  const token = storedUser?.token || storedUser?.accessToken;
+  const headers: HeadersInit = {
+    "Content-Type": "application/json",
+    ...(token ? { Authorization: `Bearer ${token}` } : {})
   };
   const options: RequestInit = { method, headers };
 
@@ -264,11 +265,11 @@ export const ServicesAPI = {
       status: s.store?.status || s.status || "active",
       members: s.store?.staffs
         ? Object.entries(s.store.staffs).map(([memberName, staff]) => ({
-            memberId: memberName,
-            memberName,
-            roles: staff.role ? Object.keys(staff.role) : [],
-            status: staff.status || "approved"
-          }))
+          memberId: memberName,
+          memberName,
+          roles: staff.role ? Object.keys(staff.role) : [],
+          status: staff.status || "approved"
+        }))
         : [],
     };
 
@@ -289,10 +290,10 @@ export const ServicesAPI = {
       availability: s.store?.timetable ?? {},
       members: s.store?.staffs
         ? Object.entries(s.store.staffs).map(([memberName, staff]) => ({
-            memberId: memberName,
-            memberName,
-            roles: staff.role ? Object.keys(staff.role) : [],
-          }))
+          memberId: memberName,
+          memberName,
+          roles: staff.role ? Object.keys(staff.role) : [],
+        }))
         : [],
       createdAt: s.created,
       createdBy: s.created_by,
@@ -329,10 +330,10 @@ export const ServicesAPI = {
       availability: s.store?.timetable ?? {},
       members: s.store?.staffs
         ? Object.entries(s.store.staffs).map(([memberName, staff]) => ({
-            memberId: memberName,
-            memberName,
-            roles: staff.role ? Object.keys(staff.role) : [],
-          }))
+          memberId: memberName,
+          memberName,
+          roles: staff.role ? Object.keys(staff.role) : [],
+        }))
         : [],
       createdAt: s.created,
       createdBy: s.created_by,
@@ -364,7 +365,7 @@ export const ServicesAPI = {
   getContent: (contentId: string) =>
     apiRequest<ApiResponse>(`get_content/${contentId}`),
 
-  updateServiceContent: (contentId: string, payload: Partial<CreateServiceContentPayload>) => apiRequest<ApiResponse>(`update_content/${contentId}`, "POST", payload),
+  updateServiceContent: (payload: CreateServiceContentPayload) => apiRequest<ApiResponse>(`create_content`, "POST", payload),
 
   getAllContentByService: async (serviceUnit: string) => {
     const raw = await apiRequest<ApiResponse>(`get_all_content_based_service/${serviceUnit}`);
@@ -381,7 +382,7 @@ export const ServicesAPI = {
   getMembersRecords: async (member: string, status: string): Promise<Member[]> => {
     const data = await apiRequest<ApiResponse<MemberRecord[]>>(`get_members_records/${member}/${status}`);
     const arr = safeArray<MemberRecord>(data);
-    
+
     return arr.map(m => ({
       id: m.member,
       name: m.member,
