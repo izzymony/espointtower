@@ -42,10 +42,10 @@ const ContentCard = ({ content, service_id }: { content: ServiceContent; service
 
   return (
     <div
-      className="group relative bg-white rounded-[2.5rem] shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 p-5 flex flex-col gap-6 ring-1 ring-border/10"
+      className="group relative bg-white rounded-[2.5rem] shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 p-5 flex flex-col ring-1 ring-border/10 h-full"
     >
       {/* Image Section */}
-      <div className="relative w-full h-[320px] rounded-[2rem] overflow-hidden bg-gray-100 shadow-inner group-hover:shadow-md transition-shadow">
+      <div className="relative w-full h-[280px] md:h-[320px] rounded-[2rem] overflow-hidden bg-gray-100 shadow-inner group-hover:shadow-md transition-shadow flex-shrink-0">
         <Image
           src={images[currentImageIndex]}
           alt={`${store.name} - Image ${currentImageIndex + 1}`}
@@ -90,46 +90,46 @@ const ContentCard = ({ content, service_id }: { content: ServiceContent; service
       </div>
 
       {/* Content Section */}
-      <div className="flex flex-col gap-1 px-2">
-        <div className="flex justify-between items-start">
-          <div>
-            <h2 className="text-3xl font-extrabold text-[#0a0a0a] leading-tight tracking-tight">
-              {store.name.toLowerCase()}
-            </h2>
-            <p className="text-[#adb5bd] font-bold text-xs uppercase tracking-[0.15em] mt-1">
-              PREMIUM OFFERING
-            </p>
-          </div>
-          {/* Active Status Pill */}
-          <div className="px-4 py-1 rounded-full border border-[#FFC107] bg-[#FFC107]/10 text-[#d4a007] text-[10px] font-bold uppercase tracking-widest">
-            {store.status}
+      <div className="flex flex-col flex-1 justify-between px-2 gap-4">
+        <div className="flex-shrink-0">
+          <div className="flex justify-between items-start gap-3">
+            <div className="flex-1 min-w-0">
+              <h2 className="text-2xl md:text-3xl font-extrabold text-[#0a0a0a] leading-tight tracking-tight truncate">
+                {store.name.toLowerCase()}
+              </h2>
+              <p className="text-[#adb5bd] font-bold text-xs uppercase tracking-[0.15em] mt-1">
+                PREMIUM OFFERING
+              </p>
+            </div>
+            {/* Active Status Pill */}
+            <div className="px-3 py-1 rounded-full border border-[#FFC107] bg-[#FFC107]/10 text-[#d4a007] text-[10px] font-bold uppercase tracking-widest flex-shrink-0">
+              {store.status}
+            </div>
           </div>
         </div>
 
         {/* Description snippet */}
-        <div className="mt-4 mb-2">
-          <p className="text-gray-400 text-sm line-clamp-2 leading-relaxed">
+        <div className="flex-1 min-h-[60px] flex items-start">
+          <p className="text-gray-600 text-sm line-clamp-3 leading-relaxed">
             {store.description}
           </p>
         </div>
 
-        <div className="h-px bg-gray-100 my-2"></div>
-
         {/* Footer / Price / Action */}
-        <div className="flex justify-between items-end mt-2">
-          <div className="flex flex-col">
+        <div className="flex justify-between items-end gap-3 flex-shrink-0 pt-4 border-t border-gray-100">
+          <div className="flex flex-col min-w-0">
             <span className="text-[#adb5bd] font-bold text-[10px] uppercase tracking-[0.2em] mb-1">
               ACQUISITION TIER
             </span>
-            <span className="text-3xl font-black text-[#0a0a0a] tracking-tight">
+            <span className="text-2xl md:text-3xl font-black text-[#0a0a0a] tracking-tight">
               SL{store.base_price.toLocaleString()}
             </span>
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-shrink-0">
             <button
               onClick={() => router.push(`/dashboard/upload_services?service_id=${service_id}&content_id=${content.content_id}`)}
-              className="flex items-center gap-2 bg-primary/10 text-primary py-3 px-5 rounded-full font-bold text-sm tracking-widest uppercase hover:bg-primary hover:text-black transition-colors duration-300 shadow-sm"
+              className="flex items-center justify-center gap-2 bg-primary/10 text-primary p-3 rounded-full font-bold text-sm hover:bg-primary hover:text-black transition-colors duration-300 shadow-sm"
               title="Edit Content"
             >
               <Edit className="w-4 h-4" />
@@ -137,9 +137,9 @@ const ContentCard = ({ content, service_id }: { content: ServiceContent; service
 
             <button
               onClick={() => router.push(`/dashboard/Uploads/${service_id}/content/${content.content_id}`)}
-              className="flex items-center gap-2 bg-[#0a1120] text-white py-3 px-6 rounded-full font-bold text-sm tracking-widest uppercase hover:bg-primary hover:text-black transition-colors duration-300 shadow-lg group-hover:shadow-primary/25"
+              className="flex items-center gap-2 bg-[#0a1120] text-white py-3 px-6 rounded-full font-bold text-sm tracking-widest uppercase hover:bg-primary hover:text-black transition-colors duration-300 shadow-lg group-hover:shadow-primary/25 whitespace-nowrap"
             >
-              ENTER <ArrowRight className="w-4 h-4 ml-1" />
+              ENTER <ArrowRight className="w-4 h-4" />
             </button>
           </div>
         </div>
@@ -202,7 +202,7 @@ export default function ContentService() {
         </div>
       </div>
 
-      <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+      <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 ">
         {serviceContent.map((content) => (
           <ContentCard key={content.content_id} content={content} service_id={service_id} />
         ))}
